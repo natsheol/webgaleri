@@ -20,5 +20,16 @@ class SchoolProfile extends Model
         'instagram_url',  
         'youtube_url',    
         'twitter_url',    
+        'hero_image',
+        'founded_year',     
+        'motto',            
+        'headmaster_name',  
+        'headmaster_photo',
     ];
+
+    public function founders()
+    {
+        return $this->hasMany(Founder::class);
+    }
 }
+

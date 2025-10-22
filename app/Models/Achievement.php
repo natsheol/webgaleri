@@ -10,17 +10,29 @@ class Achievement extends Model
         'title',
         'description',
         'image',
-        'house_id',
+        'category',
         'date',
     ];
 
     protected $casts = [
         'date' => 'date',
     ];
-    
-    public function house()
+
+    public function likes()
     {
-        return $this->belongsTo(House::class);
+        return $this->hasMany(AchievementLike::class, 'achievement_id');
     }
 
+    public function comments()
+    {
+        return $this->hasMany(AchievementComment::class, 'achievement_id');
+    }
+
+    public function approvedComments()
+    {
+        return $this->hasMany(AchievementComment::class, 'achievement_id')
+                    ->where('is_approved', true)
+                    ->orderBy('created_at', 'desc');
+    }
 }
+

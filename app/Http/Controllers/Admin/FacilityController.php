@@ -8,9 +8,6 @@ use App\Models\FacilityCategory;
 
 class FacilityController extends Controller
 {
-    /**
-     * Tampilkan semua kategori fasilitas (admin)
-     */
     public function index()
     {
         $categories = FacilityCategory::with('photos')
@@ -21,17 +18,11 @@ class FacilityController extends Controller
         return view('admin.facilities.categories.index', compact('categories'));
     }
 
-    /**
-     * Form tambah kategori baru
-     */
     public function create()
     {
         return view('admin.facilities.create');
     }
 
-    /**
-     * Simpan kategori baru
-     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -43,21 +34,14 @@ class FacilityController extends Controller
 
         FacilityCategory::create($data);
 
-        return redirect()->route('admin.facilities.index')
-                         ->with('success', 'Category created successfully!');
+        return redirect()->route('admin.facilities.index')->with('success', 'Category created successfully!');
     }
 
-    /**
-     * Form edit kategori
-     */
     public function edit(FacilityCategory $category)
     {
         return view('admin.facilities.edit', compact('category'));
     }
 
-    /**
-     * Update kategori
-     */
     public function update(Request $request, FacilityCategory $category)
     {
         $data = $request->validate([
@@ -69,18 +53,13 @@ class FacilityController extends Controller
 
         $category->update($data);
 
-        return redirect()->route('admin.facilities.index')
-                         ->with('success', 'Category updated successfully!');
+        return redirect()->route('admin.facilities.index')->with('success', 'Category updated successfully!');
     }
 
-    /**
-     * Hapus kategori
-     */
     public function destroy(FacilityCategory $category)
     {
         $category->delete();
 
-        return redirect()->route('admin.facilities.index')
-                         ->with('success', 'Category deleted successfully!');
+        return redirect()->route('admin.facilities.index')->with('success', 'Category deleted successfully!');
     }
 }

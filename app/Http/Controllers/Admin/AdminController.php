@@ -8,6 +8,7 @@ use App\Models\House;
 use App\Models\Professor;
 use App\Models\Achievement;
 use App\Models\HogwartsProphet;
+use App\Models\FacilityPhoto;
 
 class AdminController extends Controller
 {
@@ -16,32 +17,37 @@ class AdminController extends Controller
         $admin = auth()->guard('admin')->user();
         $currentYear = now()->year;
 
-        // 1️⃣ Total students (last 7 years)
-        $studentsTotal = Student::whereYear('created_at', '>=', $currentYear - 6)->count();
+        // Debug active students
+        // $studentsTotal = Student::where('year', '>=', $currentYear - 6)->count();
+        // dd(Student::where('year', '>=', $currentYear - 6)->get()->toArray());
 
-        // 2️⃣ House stats (students per house, last 7 years)
+        // 1️⃣ Total Active Students (last 7 years)
+        $studentsTotal = Student::where('year', '>=', $currentYear - 6)->count();
+
+        // 2️⃣ House stats (Active students per house, last 7 years)
         $houses = House::all();
-        $houseStats = $houses->map(function($house) use ($currentYear) {
-            $totalsPerHouse = [];
-            for ($i = 6; $i >= 0; $i--) {
-                $year = $currentYear - $i;
-                $totalsPerHouse[] = Student::where('house_id', $house->id)
-                                            ->whereYear('created_at', $year)
-                                            ->count();
-            }
-            $house->students_last7years = array_sum($totalsPerHouse);
+        $houseStats = $houses->map(function ($house) use ($currentYear) {
+            $activeCount = Student::where('house_id', $house->id)
+                                  ->where('year', '>=', $currentYear - 6)
+                                  ->count();
+            $house->students_last7years = $activeCount;
             return $house;
         });
 
-        // 3️⃣ Chart: students per year (last 7 years)
+        // 3️⃣ Chart: Active students per year (last 7 years)
         $years = [];
         $totals = [];
         for ($i = 6; $i >= 0; $i--) {
             $year = $currentYear - $i;
             $years[] = $year;
-            $totals[] = Student::whereYear('created_at', $year)->count();
+            $totals[] = Student::where('year', $year)
+                               ->where('year', '>=', $currentYear - 6) // ✅ jaga konsistensi "active only"
+                               ->count();
         }
-        $studentPerYear = ['years' => $years, 'totals' => $totals];
+        $studentPerYear = [
+            'years' => $years,
+            'totals' => $totals,
+        ];
 
         // 4️⃣ Professors count
         $professorsTotal = Professor::count();
@@ -54,6 +60,29 @@ class AdminController extends Controller
 
         // 7️⃣ School profile
         $school = \App\Models\SchoolProfile::first();
+        
+        // If no school profile exists, create a default one
+        if (!$school) {
+            $school = \App\Models\SchoolProfile::create([
+                'title' => 'Hogwarts School of Witchcraft and Wizardry',
+                'about' => 'A magical school for young wizards and witches.',
+                'address' => 'Scotland, United Kingdom',
+                'phone' => '+44 123 456 7890',
+                'email' => 'info@hogwarts.edu',
+                'founded_year' => 990,
+                'motto' => 'Draco Dormiens Nunquam Titillandus',
+                'vision' => 'To provide the finest magical education in the world.',
+                'mission' => 'To nurture young witches and wizards in the magical arts.',
+            ]);
+        }
+
+        // 8️⃣ View Statistics
+        $totalViews = FacilityPhoto::sum('view_count');
+        $mostViewedPhotos = FacilityPhoto::with('category')
+            ->orderBy('view_count', 'desc')
+            ->take(5)
+            ->get();
+        $totalPhotos = FacilityPhoto::count();
 
         return view('admin.dashboard', compact(
             'admin',
@@ -63,7 +92,10 @@ class AdminController extends Controller
             'professorsTotal',
             'latestNews',
             'latestAchievements',
-            'school'
+            'school',
+            'totalViews',
+            'mostViewedPhotos',
+            'totalPhotos'
         ));
     }
 }

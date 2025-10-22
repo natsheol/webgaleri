@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Hogwarts Admin Panel</title>
 
-    {{-- Load Tailwind + JS --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Tailwind CSS CDN --}}
+    <script src="https://cdn.tailwindcss.com"></script>
 
     {{-- Font Awesome --}}
     <link

@@ -14,8 +14,8 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $houses = House::all(); // semua house, buat filter
-
         $currentYear = now()->year;
+
         $query = Student::query();
 
         // Filter house
@@ -33,9 +33,18 @@ class StudentController extends Controller
         }
 
         $students = $query->with('house')->latest()->get();
-        $totalStudents = $students->count();
 
-        return view('admin.students.index', compact('students', 'houses', 'totalStudents'));
+        // ✅ TOTAL ACTIVE STUDENTS (last 7 years, global)
+        $totalStudents = Student::where('year', '>=', $currentYear - 6)->count();
+
+        // ✅ BREAKDOWN PER HOUSE (hanya active students)
+        $houseStats = House::withCount([
+            'students as students_last7years' => function ($query) use ($currentYear) {
+                $query->where('year', '>=', $currentYear - 6);
+            }
+        ])->get();
+
+        return view('admin.students.index', compact('students', 'houses', 'totalStudents', 'houseStats'));
     }
 
     // Create form
