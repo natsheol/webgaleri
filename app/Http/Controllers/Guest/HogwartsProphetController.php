@@ -22,8 +22,13 @@ class HogwartsProphetController extends Controller
     public function show($id)
     {
         $hogwartsProphet = HogwartsProphet::findOrFail($id);
+        $hogwartsProphet->increment('view_count');
+        $otherArticles = HogwartsProphet::where('id', '!=', $id)
+            ->latest()
+            ->take(5)
+            ->get();
 
-        return view('guest.hogwarts-prophet.show', compact('hogwartsProphet'));
+        return view('guest.hogwarts-prophet.show', compact('hogwartsProphet', 'otherArticles'));
     }
 
     public function toggleLike(Request $request, $articleId)
@@ -112,7 +117,6 @@ class HogwartsProphetController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'nullable|string|max:100',
             'content' => 'required|string|max:1000',
         ]);
 
@@ -124,7 +128,7 @@ class HogwartsProphetController extends Controller
         }
 
         $userId = auth('web')->id();
-        $userName = auth('web')->check() ? auth('web')->user()->name : ($request->name ?: 'Anonymous');
+        $userName = auth('web')->user()->name;
 
         $comment = HogwartsProphetComment::create([
             'hogwarts_prophet_id' => $articleId,

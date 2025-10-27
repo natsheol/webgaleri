@@ -12,7 +12,7 @@ class HogwartsProphetController extends Controller
 {
     public function index(Request $request)
     {
-        $query = HogwartsProphet::query();
+        $query = HogwartsProphet::query()->withCount('likes');
 
         if ($search = $request->input('search')) {
             $query->where('title', 'like', "%{$search}%")

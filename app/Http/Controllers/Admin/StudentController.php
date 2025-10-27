@@ -34,8 +34,10 @@ class StudentController extends Controller
 
         $students = $query->with('house')->latest()->get();
 
-        // ✅ TOTAL ACTIVE STUDENTS (last 7 years, global)
-        $totalStudents = Student::where('year', '>=', $currentYear - 6)->count();
+        // ✅ TOTAL ACTIVE STUDENTS (last 7 years, global) — only those with a house
+        $totalStudents = Student::whereNotNull('house_id')
+                                ->where('year', '>=', $currentYear - 6)
+                                ->count();
 
         // ✅ BREAKDOWN PER HOUSE (hanya active students)
         $houseStats = House::withCount([

@@ -67,9 +67,24 @@
                     </div>
 
                     <div class="mt-4 text-sm text-gray-500 flex justify-between items-end">
-                        <div>
+                        <div class="space-y-1">
                             <p><span class="font-medium">{{ $item->writer }}</span></p>
                             <p class="text-xs text-gray-400">{{ $item->created_at->format('d M Y') }}</p>
+                            <div class="flex items-center gap-3">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    {{ $item->view_count ?? 0 }}
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-xs">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 4.22 2.54C11.09 5.01 12.76 4 14.5 4 17 4 19 6 19 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                    {{ $item->likes_count ?? 0 }}
+                                </span>
+                            </div>
                         </div>
                         <div class="flex gap-2">
                             <a href="{{ route('admin.hogwarts-prophet.edit', $item->id) }}"

@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-6 pt-32 pb-12">
-    <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-8">
+<div class="relative max-w-7xl mx-auto px-6 pt-32 pb-12 lg:pr-96">
+    <div class="max-w-3xl bg-white rounded-xl shadow-lg p-8 lg:mx-0 mx-auto">
         {{-- Image --}}
         @if (!empty($hogwartsProphet->image) && file_exists(public_path('storage/' . $hogwartsProphet->image)))
             <img src="{{ asset('storage/' . $hogwartsProphet->image) }}" 
@@ -46,6 +46,7 @@
 
         {{-- LIKE BUTTON --}}
         <div class="mt-8 pt-6 border-t">
+            @auth('web')
             <button id="likeButton" 
                     class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
                     data-article-id="{{ $hogwartsProphet->id }}">
@@ -55,6 +56,12 @@
                 <span id="likeCount" class="font-semibold">0</span>
                 <span class="text-sm text-gray-600">Likes</span>
             </button>
+            @else
+            <div class="flex items-center justify-between bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3">
+                <span class="text-sm">Login untuk menyukai artikel ini.</span>
+                <a href="{{ route('user.login') }}" class="text-amber-700 font-semibold hover:underline">Login</a>
+            </div>
+            @endauth
         </div>
 
         {{-- COMMENTS SECTION --}}
@@ -62,17 +69,9 @@
             <h3 class="text-xl font-bold text-gray-800 mb-4">Comments</h3>
             
             {{-- Comment Form --}}
+            @auth('web')
             <form id="commentForm" class="mb-6">
                 <input type="text" name="website" class="hidden" autocomplete="off">
-                @guest('web')
-                <div class="mb-3">
-                    <input type="text" 
-                           id="commentName" 
-                           name="name" 
-                           placeholder="Your name (optional)" 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
-                </div>
-                @endguest
                 <div class="mb-3">
                     <textarea id="commentContent" 
                               name="content" 
@@ -86,13 +85,43 @@
                     Post Comment
                 </button>
             </form>
+            @else
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mb-6">
+                <p class="text-sm">Login untuk menulis komentar. <a href="{{ route('user.login') }}" class="font-semibold underline">Login sekarang</a>.</p>
+            </div>
+            @endauth
 
             {{-- Comments List --}}
             <div id="commentsList" class="space-y-4">
                 <!-- Comments will be loaded here -->
             </div>
-        </div>
     </div>
+
+    <aside class="hidden lg:block absolute right-6 top-0 w-80">
+        <div class="bg-white rounded-xl shadow-lg p-6 sticky top-28">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-1.5 h-6 bg-rose-600 rounded"></div>
+                <h3 class="text-xl font-extrabold text-sky-700">Terpopuler</h3>
+            </div>
+            <div>
+                @forelse($otherArticles as $item)
+                    <a href="{{ route('guest.hogwarts-prophet.show', $item->id) }}" class="block py-3 group border-b last:border-0">
+                        <div class="flex gap-3 items-start">
+                            <div class="w-6 h-6 flex items-center justify-center rounded-full bg-sky-100 text-sky-700 text-sm font-bold">
+                                {{ $loop->iteration }}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-sky-700">{{ $item->title }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ $item->created_at->format('d M Y') }}</p>
+                            </div>
+                        </div>
+                    </a>
+                @empty
+                    <p class="text-sm text-gray-500">Belum ada artikel lain.</p>
+                @endforelse
+            </div>
+        </div>
+    </aside>
 </div>
 
 {{-- JAVASCRIPT --}}
@@ -106,7 +135,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const commentsList = document.getElementById('commentsList');
 
     // Load initial data
-    loadLikeStatus();
+    if (likeButton && likeCount && likeIcon) {
+        loadLikeStatus();
+    }
     loadComments();
 
     // === LIKE FUNCTIONALITY ===
@@ -120,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateLikeButton(liked, count) {
+        if (!likeButton || !likeIcon || !likeCount) return;
         likeCount.textContent = count;
         if (liked) {
             likeButton.classList.add('bg-red-100', 'text-red-600');
@@ -132,22 +164,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    likeButton.addEventListener('click', function() {
-        fetch(`/guest/hogwarts-prophet/${articleId}/like`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                updateLikeButton(data.liked, data.like_count);
-            }
-        })
-        .catch(err => console.error('Like failed:', err));
-    });
+    if (likeButton) {
+        likeButton.addEventListener('click', function() {
+            fetch(`/guest/hogwarts-prophet/${articleId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateLikeButton(data.liked, data.like_count);
+                }
+            })
+            .catch(err => console.error('Like failed:', err));
+        });
+    }
 
     // === COMMENT FUNCTIONALITY ===
     function loadComments() {
@@ -178,43 +212,40 @@ document.addEventListener('DOMContentLoaded', function() {
         `).join('');
     }
 
-    commentForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(commentForm);
-        const data = {
-            content: formData.get('content'),
-            website: formData.get('website')
-        };
-        
-        // Only add name if field exists (for guests)
-        if (formData.has('name')) {
-            data.name = formData.get('name');
-        }
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(commentForm);
+            const data = {
+                content: formData.get('content'),
+                website: formData.get('website')
+            };
 
-        fetch(`/guest/hogwarts-prophet/${articleId}/comments`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify(data)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                commentForm.reset();
-                loadComments();
-                alert('Comment posted successfully!');
-            } else {
-                alert(data.message || 'Failed to post comment');
-            }
-        })
-        .catch(err => {
-            console.error('Comment failed:', err);
-            alert('Failed to post comment');
+            fetch(`/guest/hogwarts-prophet/${articleId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    commentForm.reset();
+                    loadComments();
+                    alert('Comment posted successfully!');
+                } else {
+                    alert(data.message || 'Failed to post comment');
+                }
+            })
+            .catch(err => {
+                console.error('Comment failed:', err);
+                alert('Failed to post comment');
+            });
         });
-    });
+    }
 
     // === HELPER FUNCTIONS ===
     function escapeHtml(text) {

@@ -14,15 +14,17 @@ class SchoolProfileController extends Controller
     {
         $profile  = SchoolProfile::with('founders')->first();
         $founders = $profile ? $profile->founders : collect();
-        $houses   = House::all();
         $currentYear = now()->year;
 
-        // Students per house (last 7 years)
-        $houseStats = House::withCount([
-            'students as students_last7years' => function ($query) use ($currentYear) {
-                $query->where('year', '>=', $currentYear - 6);
-            }
-        ])->get();
+        // Students per house (last 7 years) - align with Admin controller logic
+        $houses = House::all();
+        $houseStats = $houses->map(function ($house) use ($currentYear) {
+            $activeCount = Student::where('house_id', $house->id)
+                                  ->where('year', '>=', $currentYear - 6)
+                                  ->count();
+            $house->students_last7years = $activeCount;
+            return $house;
+        });
 
         // Total active students (last 7 years)
         $studentsTotal = Student::where('year', '>=', $currentYear - 6)->count();
@@ -30,13 +32,20 @@ class SchoolProfileController extends Controller
         // Total professors
         $totalProfessors = Professor::count();
 
-        // Optional: total students per year for chart
-        $studentPerYear = [];
-        for ($i = 0; $i < 7; $i++) {
-            $year = $currentYear - 6 + $i;
-            $studentPerYear['years'][]  = $year;
-            $studentPerYear['totals'][] = Student::where('year', $year)->count();
+        // Total students per year (last 7 years) - align order and filter
+        $years = [];
+        $totals = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $year = $currentYear - $i;
+            $years[] = $year;
+            $totals[] = Student::where('year', $year)
+                               ->where('year', '>=', $currentYear - 6)
+                               ->count();
         }
+        $studentPerYear = [
+            'years' => $years,
+            'totals' => $totals,
+        ];
 
         return view('guest.sections.school-profiles', compact(
             'profile',

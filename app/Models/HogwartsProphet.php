@@ -16,6 +16,7 @@ class HogwartsProphet extends Model
         'writer',
         'date',
         'image',
+        'view_count',
         'slug', // tambahin ini
     ];
 

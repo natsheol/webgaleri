@@ -85,12 +85,14 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::get('/hogwarts-prophet', [GuestHogwartsProphetController::class, 'index'])
         ->name('hogwarts-prophet.index');
     Route::post('/hogwarts-prophet/{articleId}/like', [GuestHogwartsProphetController::class, 'toggleLike'])
+        ->middleware('auth')
         ->name('hogwarts-prophet.like');
     Route::get('/hogwarts-prophet/{articleId}/like-status', [GuestHogwartsProphetController::class, 'getLikeStatus'])
         ->name('hogwarts-prophet.like-status');
     Route::get('/hogwarts-prophet/{articleId}/comments', [GuestHogwartsProphetController::class, 'getComments'])
         ->name('hogwarts-prophet.comments');
     Route::post('/hogwarts-prophet/{articleId}/comments', [GuestHogwartsProphetController::class, 'storeComment'])
+        ->middleware('auth')
         ->name('hogwarts-prophet.comments.store');
     Route::get('/hogwarts-prophet/{slug}', [GuestHogwartsProphetController::class, 'show'])
         ->name('hogwarts-prophet.show');

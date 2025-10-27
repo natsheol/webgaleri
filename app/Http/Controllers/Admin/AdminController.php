@@ -22,7 +22,9 @@ class AdminController extends Controller
         // dd(Student::where('year', '>=', $currentYear - 6)->get()->toArray());
 
         // 1️⃣ Total Active Students (last 7 years)
-        $studentsTotal = Student::where('year', '>=', $currentYear - 6)->count();
+        $studentsTotal = Student::whereNotNull('house_id')
+                                 ->where('year', '>=', $currentYear - 6)
+                                 ->count();
 
         // 2️⃣ House stats (Active students per house, last 7 years)
         $houses = House::all();
@@ -40,7 +42,8 @@ class AdminController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $year = $currentYear - $i;
             $years[] = $year;
-            $totals[] = Student::where('year', $year)
+            $totals[] = Student::whereNotNull('house_id')
+                               ->where('year', $year)
                                ->where('year', '>=', $currentYear - 6) // ✅ jaga konsistensi "active only"
                                ->count();
         }
