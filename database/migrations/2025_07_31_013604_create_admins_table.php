@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('admins', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('gender', ['M', 'L']);
+            $table->enum('gender', ['M', 'L'])->nullable(); // bisa nullable supaya seeder tidak error
             $table->string('email')->unique();
             $table->string('password');
+            $table->rememberToken(); // penting untuk Auth
             $table->timestamps();
         });
         

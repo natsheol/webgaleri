@@ -12,8 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->alias([
-            'auth.admin' => \App\Http\Middleware\AdminAuth::class,
+        $middleware->web(append: [
+            \App\Http\Middleware\PreventBackAfterLogout::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

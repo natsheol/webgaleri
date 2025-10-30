@@ -14,7 +14,6 @@
                 <a href="{{ route('guest.home') }}#houses" class="block text-gray-700 hover:text-amber-700">Houses</a>
                 <a href="{{ route('guest.hogwarts-prophet.index') }}" class="block text-gray-700 hover:text-amber-700">HogwartsProphet</a>
                 <a href="{{ route('guest.facilities.index') }}" class="block text-gray-700 hover:text-amber-700">Facilities</a>
-                <a href="{{ route('guest.home') }}#contact" class="block text-gray-700 hover:text-amber-700">Contact</a>
                 
                 {{-- User Auth Links --}}
                 @auth('web')
@@ -62,7 +61,7 @@
         </div>
     </div>
 
-    <!-- Mobile Menu -->
+    <!-- Mobile Menu
     <div x-show="open" class="lg:hidden px-4 pb-4 space-y-2">
         <a href="{{ route('guest.home') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">Home</a>
         <a href="{{ route('guest.home') }}#school-profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">Profile</a>
@@ -85,5 +84,5 @@
             <a href="{{ route('user.login') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">Login</a>
             <a href="{{ route('user.register') }}" class="block px-4 py-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded text-center">Register</a>
         @endauth
-    </div>
+    </div> -->
 </nav>

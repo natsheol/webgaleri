@@ -24,40 +24,51 @@ class FounderController extends Controller
 
     public function store(Request $request)
     {
-        // Get the first school profile or create a default one
-        $schoolProfile = SchoolProfile::first();
-        if (!$schoolProfile) {
-            $schoolProfile = SchoolProfile::create([
-                'title' => 'Hogwarts School of Witchcraft and Wizardry',
-                'about' => 'A magical school for young wizards and witches.',
-                'address' => 'Scotland, United Kingdom',
-                'phone' => '+44 123 456 7890',
-                'email' => 'info@hogwarts.edu',
-                'founded_year' => 990,
-                'motto' => 'Draco Dormiens Nunquam Titillandus',
-                'vision' => 'To provide the finest magical education in the world.',
-                'mission' => 'To nurture young witches and wizards in the magical arts.',
+        try {
+            // Validate the request
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'birth_year' => 'required|integer|min:500|max:' . date('Y'),
+                'description' => 'nullable|string',
+                'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
             ]);
+
+            // Get or create school profile
+            $schoolProfile = SchoolProfile::firstOrCreate(
+                ['id' => 1],
+                [
+                    'title' => 'Hogwarts School of Witchcraft and Wizardry',
+                    'about' => 'A magical school for young wizards and witches.',
+                    'address' => 'Scotland, United Kingdom',
+                    'phone' => '+44 123 456 7890',
+                    'email' => 'info@hogwarts.edu',
+                    'founded_year' => 990,
+                    'motto' => 'Draco Dormiens Nunquam Titillandus',
+                    'vision' => 'To provide the finest magical education in the world.',
+                    'mission' => 'To nurture young witches and wizards in the magical arts.',
+                ]
+            );
+
+            // Handle file upload
+            if ($request->hasFile('photo')) {
+                $path = $request->file('photo')->store('public/founders');
+                $validated['photo'] = str_replace('public/', '', $path);
+            }
+
+            // Create founder with validated data
+            $founder = new Founder($validated);
+            $founder->school_profile_id = $schoolProfile->id;
+            $founder->save();
+
+            return redirect()
+                ->route('admin.school-profile.founders.index')
+                ->with('success', 'Pendiri berhasil ditambahkan!');
+
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal menambahkan pendiri: ' . $e->getMessage());
         }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'birth_year' => 'required|integer|min:500|max:' . date('Y'),
-            'description' => 'nullable|string',
-            'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-        ]);
-
-        $data = $request->all();
-        $data['school_profile_id'] = $schoolProfile->id;
-
-        if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('founders', 'public');
-        }
-
-        Founder::create($data);
-
-        return redirect()->route('admin.school-profile.founders.index')
-            ->with('success', 'Founder created successfully!');
     }
 
     public function edit(Founder $founder)
@@ -75,22 +86,22 @@ class FounderController extends Controller
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
-        // ✅ Handle upload foto
+        
         if ($request->hasFile('photo')) {
-            // Hapus foto lama kalau ada
+            
             if ($founder->photo && Storage::disk('public')->exists($founder->photo)) {
                 Storage::disk('public')->delete($founder->photo);
             }
 
-            // Simpan foto baru
+            
             $validated['photo'] = $request->file('photo')->store('founders', 'public');
         }
 
-        // Update founder (keep existing school_profile_id)
+        
         $founder->update($validated);
 
-        return redirect()->route('admin.school-profile.founders.index')
-                        ->with('success', 'Founder updated successfully!');
+        return redirect()->route('admin.school-profile.edit')
+    ->with('success', 'Founder updated successfully!');
     }
 
 
@@ -99,7 +110,7 @@ class FounderController extends Controller
     public function destroy(Founder $founder)
     {
         $founder->delete();
-        return redirect()->route('admin.school-profile.founders.index')
+        return redirect()->route('admin.school-profile.founders.edit')
             ->with('success', 'Founder deleted successfully!');
     }
 }

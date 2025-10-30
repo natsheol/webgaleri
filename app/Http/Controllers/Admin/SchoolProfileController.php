@@ -68,14 +68,15 @@ class SchoolProfileController extends Controller
     }
 
     public function update(Request $request)
-    {
-        $profile = SchoolProfile::first();
-        
-        if (!$profile) {
-            return redirect()->route('admin.school-profile.index')
-                ->with('error', 'School profile not found.');
-        }
+{
+    $profile = SchoolProfile::first();
 
+    if (!$profile) {
+        return redirect()->route('admin.school-profile.index')
+            ->with('error', 'School profile not found.');
+    }
+
+    try {
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'about' => 'nullable|string',
@@ -99,7 +100,6 @@ class SchoolProfileController extends Controller
 
         // Handle file uploads
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists
             if ($profile->logo && Storage::disk('public')->exists($profile->logo)) {
                 Storage::disk('public')->delete($profile->logo);
             }
@@ -107,7 +107,6 @@ class SchoolProfileController extends Controller
         }
 
         if ($request->hasFile('hero_image')) {
-            // Delete old hero image if exists
             if ($profile->hero_image && Storage::disk('public')->exists($profile->hero_image)) {
                 Storage::disk('public')->delete($profile->hero_image);
             }
@@ -115,7 +114,6 @@ class SchoolProfileController extends Controller
         }
 
         if ($request->hasFile('headmaster_photo')) {
-            // Delete old headmaster photo if exists
             if ($profile->headmaster_photo && Storage::disk('public')->exists($profile->headmaster_photo)) {
                 Storage::disk('public')->delete($profile->headmaster_photo);
             }
@@ -124,7 +122,27 @@ class SchoolProfileController extends Controller
 
         $profile->update($data);
 
+        // Return JSON response for AJAX or redirect with success message
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'School profile updated successfully!',
+                'redirect' => route('admin.school-profile.index')
+            ]);
+        }
+
         return redirect()->route('admin.school-profile.index')
-            ->with('success', 'School profile updated successfully.');
+            ->with('success', 'School profile updated successfully!');
+    } catch (\Exception $e) {
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update profile: ' . $e->getMessage()
+            ], 500);
+        }
+        return redirect()->back()
+            ->with('error', 'Failed to update profile: ' . $e->getMessage());
     }
+}
+
 }

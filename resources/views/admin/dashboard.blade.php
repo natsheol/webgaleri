@@ -3,17 +3,19 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<section class="min-h-screen bg-gray-100 pt-20 pb-10 px-6">
-    <div class="max-w-7xl mx-auto space-y-6">
+<section class="min-h-screen bg-white text-gray-800 pt-20 pb-10 px-6">
+    <div class="max-w-7xl mx-auto space-y-10">
 
-        <!-- Welcome Header -->
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">
-            Welcome, {{ $admin->formal_name ?? 'Admin' }}
-        </h1>
-        <p class="text-gray-500 mb-10">Manage Hogwarts site from one place.</p>
+        {{-- Centered Header --}}
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] bg-clip-text text-transparent">
+                Admin Dashboard
+            </h1>
+            <p class="text-gray-500 mt-2">Welcome, {{ $admin->formal_name ?? 'Admin' }} — Manage Hogwarts from one place</p>
+        </div>
 
-        <!-- School Overview -->
-        <div class="bg-white shadow rounded-xl p-6 mb-6">
+        {{-- School Overview --}}
+        <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">School Overview</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div>
@@ -24,53 +26,48 @@
                 </div>
                 <div class="flex justify-start md:justify-end">
                     <a href="{{ route('admin.school-profile.edit') }}" 
-                       class="px-4 py-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded-lg">
+                       class="px-5 py-2.5 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded-xl font-medium shadow hover:opacity-90 transition">
                        Manage School Profile
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Students Overview -->
-        <div class="bg-white shadow rounded-xl p-6 mb-6">
+        {{-- Students Overview --}}
+        <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Students Overview</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
 
-                <!-- Total Students + House Stats -->
+                {{-- Total Students + House Stats --}}
                 <div class="col-span-1 flex flex-col h-full">
                     <p id="totalStudents"
-                    class="text-5xl font-bold mb-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] bg-clip-text text-transparent">
+                       class="text-5xl font-bold mb-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] bg-clip-text text-transparent">
                         0
                     </p>
                     <p class="text-gray-600 mb-4">Active Students (last 7 years)</p>
 
                     <div class="grid grid-cols-2 gap-4 mt-4">
                         @foreach($houseStats as $house)
-                            <div class="p-4 rounded-lg border shadow-sm text-center transform transition duration-500 ease-out
-                                        hover:scale-105 hover:shadow-lg animate-fade-in-up"
-                                style="animation-delay: {{ $loop->index * 150 }}ms;">
-                                <img src="{{ asset('storage/' . $house->logo) }}" 
-                                    class="w-10 h-10 mx-auto mb-2" 
-                                    alt="{{ $house->name }}">
-                                <p class="font-semibold">{{ $house->name }}</p>
+                            <div class="p-4 rounded-xl border border-gray-200 bg-gray-50 shadow-sm text-center transform transition duration-500 hover:scale-105 hover:shadow-lg">
+                                <img src="{{ asset('storage/' . $house->logo) }}" class="w-10 h-10 mx-auto mb-2" alt="{{ $house->name }}">
+                                <p class="font-semibold text-gray-800">{{ $house->name }}</p>
                                 <p class="text-gray-600 text-sm">{{ $house->students_last7years }} students</p>
                             </div>
                         @endforeach
                     </div>
                 </div>
 
-                <!-- Chart -->
+                {{-- Chart --}}
                 <div class="col-span-2 flex items-center">
                     <canvas id="studentChart" class="w-full h-64"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Latest Hogwarts Prophet & Achievements -->
+        {{-- Latest Hogwarts Prophet & Achievements --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            <!-- Hogwarts Prophet Card -->
-            <div class="bg-white shadow rounded-xl p-6 mb-6 relative">
+            {{-- Hogwarts Prophet --}}
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Latest Hogwarts Prophet</h2>
                 <div class="flex flex-col space-y-3">
                     @foreach($latestNews as $news)
@@ -78,7 +75,7 @@
                             <div class="absolute px-2 py-1 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white text-xs font-semibold rounded-br-lg rounded-tr-lg">
                                 {{ $news->category ?? 'General' }}
                             </div>
-                            <div class="w-28 h-20 flex-shrink-0 overflow-hidden bg-gray-200 rounded-l-lg relative">
+                            <div class="w-28 h-20 overflow-hidden bg-gray-200 rounded-l-lg">
                                 @if($news->image && file_exists(public_path('storage/' . $news->image)))
                                     <img src="{{ asset('storage/' . $news->image) }}" class="w-full h-full object-cover" alt="{{ $news->title }}">
                                 @else
@@ -95,13 +92,13 @@
                     @endforeach
                 </div>
                 <a href="{{ route('admin.hogwarts-prophet.index') }}" 
-                   class="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded-lg text-sm">
+                   class="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded-lg text-sm shadow hover:opacity-90 transition">
                    Manage Hogwarts Prophet
                 </a>
             </div>
 
-            <!-- Achievements Card -->
-            <div class="bg-white shadow rounded-xl p-6 mb-6 relative">
+            {{-- Achievements --}}
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Latest Achievements</h2>
                 <div class="flex flex-col space-y-3">
                     @foreach($latestAchievements as $achievement)
@@ -109,7 +106,7 @@
                             <div class="absolute px-2 py-1 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white text-xs font-semibold rounded-br-lg rounded-tr-lg">
                                 {{ $achievement->category ?? 'Achievement' }}
                             </div>
-                            <div class="w-28 h-20 flex-shrink-0 overflow-hidden bg-gray-200 rounded-l-lg relative">
+                            <div class="w-28 h-20 overflow-hidden bg-gray-200 rounded-l-lg">
                                 @if($achievement->image && file_exists(public_path('storage/' . $achievement->image)))
                                     <img src="{{ asset('storage/' . $achievement->image) }}" class="w-full h-full object-cover" alt="{{ $achievement->title }}">
                                 @else
@@ -126,131 +123,145 @@
                     @endforeach
                 </div>
                 <a href="{{ route('admin.achievements.index') }}" 
-                   class="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded-lg text-sm">
+                   class="mt-4 inline-block px-4 py-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded-lg text-sm shadow hover:opacity-90 transition">
                    Manage Achievements
                 </a>
             </div>
         </div>
-        <!-- View Statistics -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">
-                <i class="fas fa-eye mr-2 text-blue-600"></i> View Statistics
-            </h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-blue-600 font-medium">Total Views</p>
-                            <p class="text-3xl font-bold text-blue-700">{{ number_format($totalViews) }}</p>
-                        </div>
-                        <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                            <i class="fas fa-eye text-white text-xl"></i>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-green-600 font-medium">Total Photos</p>
-                            <p class="text-3xl font-bold text-green-700">{{ number_format($totalPhotos) }}</p>
-                        </div>
-                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                            <i class="fas fa-images text-white text-xl"></i>
-                        </div>
-                    </div>
-                </div>
+        {{-- View Statistics --}}
+        <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
+           <div class="text-center mb-8">
+        <h2 class="text-3xl font-extrabold bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] bg-clip-text text-transparent">
+            View Statistics
+        </h2>
+        <p class="text-gray-500 mt-2">Monitor and analyze engagement on facility photos</p>
+    </div>
 
-                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-purple-600 font-medium">Avg Views/Photo</p>
-                            <p class="text-3xl font-bold text-purple-700">{{ $totalPhotos > 0 ? number_format($totalViews / $totalPhotos, 1) : 0 }}</p>
-                        </div>
-                        <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
-                            <i class="fas fa-chart-line text-white text-xl"></i>
-                        </div>
-                    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Total Views -->
+        <div class="rounded-2xl bg-white shadow-md border border-gray-200 p-6 hover:shadow-lg transition">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <p class="text-xs font-semibold text-[#425d9e] uppercase mb-1">Total Views</p>
+                    <h3 class="text-3xl font-bold text-gray-900">{{ number_format($totalViews) }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-[#425d9e] rounded-full flex items-center justify-center">
+                    <i class="fas fa-eye text-white text-xl"></i>
                 </div>
             </div>
+            <p class="text-sm text-gray-500">Across all uploaded facility photos</p>
+        </div>
 
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">
-                <i class="fas fa-fire mr-2 text-orange-500"></i> Most Viewed Photos
-            </h3>
-            <div class="space-y-2">
-                @forelse($mostViewedPhotos as $index => $photo)
-                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                        <div class="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold">
-                            {{ $index + 1 }}
-                        </div>
-                        <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                            @if($photo->image)
-                                <img src="{{ asset('storage/' . $photo->image) }}" alt="{{ $photo->name }}" class="w-full h-full object-cover">
-                            @else
-                                <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                    <i class="fas fa-image"></i>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-gray-800 truncate">{{ $photo->name }}</p>
-                            <p class="text-sm text-gray-500">{{ $photo->category->name ?? 'No Category' }}</p>
-                        </div>
-                        <div class="flex items-center gap-2 text-blue-600">
-                            <i class="fas fa-eye"></i>
-                            <span class="font-bold">{{ number_format($photo->view_count) }}</span>
-                        </div>
+        <!-- Total Photos -->
+        <div class="rounded-2xl bg-white shadow-md border border-gray-200 p-6 hover:shadow-lg transition">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <p class="text-xs font-semibold text-[#3c5e5e] uppercase mb-1">Total Photos</p>
+                    <h3 class="text-3xl font-bold text-gray-900">{{ number_format($totalPhotos) }}</h3>
+                </div>
+                <div class="w-12 h-12 bg-[#3c5e5e] rounded-full flex items-center justify-center">
+                    <i class="fas fa-images text-white text-xl"></i>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500">Uploaded facility images</p>
+        </div>
+
+        <!-- Average Views per Photo -->
+        <div class="rounded-2xl bg-white shadow-md border border-gray-200 p-6 hover:shadow-lg transition">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <p class="text-xs font-semibold text-[#b03535] uppercase mb-1">Avg Views/Photo</p>
+                    <h3 class="text-3xl font-bold text-gray-900">
+                        {{ $totalPhotos > 0 ? number_format($totalViews / $totalPhotos, 1) : 0 }}
+                    </h3>
+                </div>
+                <div class="w-12 h-12 bg-[#b03535] rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-white text-xl"></i>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500">Average engagement per photo</p>
+        </div>
+    </div>
+
+    {{-- Most Viewed Photos --}}
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-fire mr-2 text-[#b03535]"></i> Most Viewed Photos
+        </h3>
+
+        <div class="space-y-3">
+            @forelse($mostViewedPhotos as $index => $photo)
+                <div class="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:shadow transition">
+                    <div class="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-[#425d9e] via-[#3c5e5e] to-[#b03535] rounded-full flex items-center justify-center text-white font-bold">
+                        {{ $index + 1 }}
                     </div>
-                @empty
-                    <p class="text-gray-500 text-center py-4">No photos yet</p>
-                @endforelse
+                    <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                        @if($photo->image)
+                            <img src="{{ asset('storage/' . $photo->image) }}" alt="{{ $photo->name }}" class="w-full h-full object-cover">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-gray-800 truncate">{{ $photo->name }}</p>
+                        <p class="text-sm text-gray-500">{{ $photo->category->name ?? 'No Category' }}</p>
+                    </div>
+                    <div class="flex items-center gap-2 text-[#425d9e]">
+                        <i class="fas fa-eye"></i>
+                        <span class="font-bold">{{ number_format($photo->view_count) }}</span>
+                    </div>
+                </div>
+            @empty
+                <p class="text-gray-500 text-center py-4">No photos yet</p>
+            @endforelse
+        </div>
+    </div>
+        </div>
+
+        {{-- Quick Actions --}}
+        <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <a href="{{ route('admin.comments.facility-photos') }}" 
+                   class="flex items-center justify-center px-4 py-3 border-2 border-[#425d9e] text-[#425d9e] rounded-xl hover:bg-[#f0f4ff] transition">
+                    <i class="fas fa-images mr-2"></i> Facility Comments
+                </a>
+                <a href="{{ route('admin.comments.hogwarts-prophet') }}" 
+                   class="flex items-center justify-center px-4 py-3 border-2 border-[#059669] text-[#059669] rounded-xl hover:bg-[#ecfdf5] transition">
+                    <i class="fas fa-newspaper mr-2"></i> Prophet Comments
+                </a>
+                <a href="{{ route('admin.comments.achievements') }}" 
+                   class="flex items-center justify-center px-4 py-3 border-2 border-[#7c3aed] text-[#7c3aed] rounded-xl hover:bg-[#faf5ff] transition">
+                    <i class="fas fa-trophy mr-2"></i> Achievement Comments
+                </a>
+                <a href="{{ route('admin.comments.likes-stats') }}" 
+                   class="flex items-center justify-center px-4 py-3 border-2 border-[#b03535] text-[#b03535] rounded-xl hover:bg-[#fef2f2] transition">
+                    <i class="fas fa-heart mr-2"></i> Likes Statistics
+                </a>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <a href="{{ route('admin.comments.facility-photos') }}" 
-               class="flex items-center justify-center px-4 py-3 border-2 border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 transition">
-                <i class="fas fa-images mr-2"></i> Facility Comments
-            </a>
-            <a href="{{ route('admin.comments.hogwarts-prophet') }}" 
-               class="flex items-center justify-center px-4 py-3 border-2 border-green-500 text-green-600 rounded-lg hover:bg-green-50 transition">
-                <i class="fas fa-newspaper mr-2"></i> Prophet Comments
-            </a>
-            <a href="{{ route('admin.comments.achievements') }}" 
-               class="flex items-center justify-center px-4 py-3 border-2 border-purple-500 text-purple-600 rounded-lg hover:bg-purple-50 transition">
-                <i class="fas fa-trophy mr-2"></i> Achievement Comments
-            </a>
-            <a href="{{ route('admin.comments.likes-stats') }}" 
-               class="flex items-center justify-center px-4 py-3 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 transition">
-                <i class="fas fa-heart mr-2"></i> Likes Statistics
-            </a>
-        </div>
     </div>
-    </div>
-    
 </section>
 
-<!-- Chart.js & Total Students Count Up -->
+{{-- Chart & Counter Script --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Count Up Total Students
     const el = document.getElementById('totalStudents');
     const target = {{ $studentsTotal }};
     let count = 0;
-    const duration = 1000; // ms
+    const duration = 1000;
     const stepTime = Math.max(Math.floor(duration / target), 10);
-
     const counter = setInterval(() => {
         count += 1;
         el.textContent = count;
         if (count >= target) clearInterval(counter);
     }, stepTime);
 
-    // Chart.js (students per year)
     const ctx = document.getElementById('studentChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -269,14 +280,9 @@ document.addEventListener('DOMContentLoaded', () => {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
-                }
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
             },
-            plugins: {
-                legend: { display: false }
-            }
+            plugins: { legend: { display: false } }
         }
     });
 });
