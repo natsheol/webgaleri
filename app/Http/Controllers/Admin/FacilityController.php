@@ -15,12 +15,12 @@ class FacilityController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.facilities.categories.index', compact('categories'));
+        return view('admin.facilities.index', compact('categories'));
     }
 
     public function create()
     {
-        return view('admin.facilities.create');
+        return view('admin.facilities.categories.create');
     }
 
     public function store(Request $request)
@@ -39,7 +39,7 @@ class FacilityController extends Controller
 
     public function edit(FacilityCategory $category)
     {
-        return view('admin.facilities.edit', compact('category'));
+        return view('admin.facilities.categories.edit', compact('category'));
     }
 
     public function update(Request $request, FacilityCategory $category)

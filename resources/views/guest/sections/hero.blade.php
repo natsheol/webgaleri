@@ -1,35 +1,58 @@
-<section id="hero" class="relative h-[80vh] flex items-center justify-center bg-white overflow-hidden">
-    {{-- Optional: magic sparkles / particles --}}
-    <div class="absolute inset-0 pointer-events-none">
-        <div class="w-full h-full">
-            {{-- Bisa tambahkan SVG star/particle animasi nanti --}}
-        </div>
-    </div>
-
-    {{-- Konten utama --}}
-    <div class="text-center px-6 md:px-12 relative z-10">
-        <!-- Judul Gradient -->
-        <h1 class="text-5xl md:text-6xl font-extrabold mb-4
-   bg-[linear-gradient(to_right,#b03535,#3c5e5e,#425d9e)]
-   bg-clip-text text-transparent drop-shadow-lg"
-   data-aos="fade-up">
-    Welcome to Hogwarts School
-</h1>
+<section id="hero" class="relative relative h-[100vh] w-screen overflow-hidden">
+    {{-- Hero Image --}}
+    <img 
+        src="{{ $profile->hero_image ? asset('storage/' . $profile->hero_image) : 'https://picsum.photos/1600/900?blur' }}"
+        alt="School Hero" 
+        class="absolute inset-0 w-full h-full object-cover brightness-[0.6]"
+    >
 
 
-        <!-- Subtitle -->
-        <p class="text-lg md:text-2xl mb-6 text-gray-700 drop-shadow"
-           data-aos="fade-up" data-aos-delay="200">
-            A place of magic, learning, and legendary stories.
+    {{-- Overlay Konten --}}
+    <div class="relative z-10 flex flex-col items-center justify-center h-full text-center px-4">
+
+        {{-- Logo (opsional) --}}
+        @if(!empty($profile->logo))
+            <div class="mt-8 flex justify-center" data-aos="zoom-in" data-aos-delay="100">
+                <img src="{{ asset('storage/' . $profile->logo) }}" 
+                     alt="School Logo" 
+                     class="h-28 w-auto rounded-xl shadow-lg   p-3">
+            </div>
+        @endif
+
+        {{-- Judul --}}
+        <h1 class="text-5xl md:text-6xl font-serif font-extrabold mb-4 leading-tight
+                text-white tracking-wide
+                drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]
+                transition-all duration-700"
+            style="text-shadow: 0 0 12px rgba(255, 215, 100, 0.25), 0 0 20px rgba(255, 215, 100, 0.15);"
+            data-aos="fade-up" data-aos-delay="300">
+            Welcome to<br> {{ $profile->title ?? 'Hogwarts School of Witchcraft and Wizardry' }}
+        </h1>
+
+
+        {{-- Subjudul --}}
+        <p class="text-lg md:text-xl mb-6 italic text-gray-200 font-light drop-shadow-sm"
+           data-aos="zoom-in" data-aos-delay="500">
+           A legacy of knowledge, courage, and unity since the dawn of wizardry.
         </p>
 
-        <!-- Button CTA -->
+        
+        {{-- CTA Button --}}
         <a href="#about"
-           class="inline-block px-6 py-3 md:px-8 md:py-4 font-semibold rounded-lg
-                  bg-[linear-gradient(to_right,#b03535,#3c5e5e,#425d9e)]
-                  text-white shadow-lg hover:scale-105 hover:shadow-xl transition-transform duration-300"
-           data-aos="fade-up" data-aos-delay="400">
-            Explore More
+        style="
+            background: linear-gradient(90deg, #7a1b1b 0%, #3b4f5f 50%, #243c7a 100%);
+            -webkit-background-clip: padding-box;
+            background-clip: padding-box;
+        "
+        class="relative overflow-hidden group inline-block px-7 py-3 md:px-9 md:py-4 font-serif rounded-2xl
+                text-white tracking-wide shadow-[0_4px_10px_rgba(0,0,0,0.25)]
+                hover:scale-105 hover:shadow-[0_6px_16px_rgba(0,0,0,0.35)]"
+        data-aos="fade-up" data-aos-delay="600">
+            <span class="relative z-10">Explore More</span>
         </a>
+
+
+        
     </div>
+    
 </section>

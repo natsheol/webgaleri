@@ -12,105 +12,146 @@ use Illuminate\Support\Facades\Validator;
 
 class FacilityController extends Controller
 {
+    // LIST categories + photos for Alpine
     public function index()
     {
-        // Ambil semua kategori tanpa filter is_active
-        $categories = FacilityCategory::with('coverPhoto')->get();
+        $categories = FacilityCategory::with(['photos', 'coverPhoto'])->get();
 
-        return view('guest.facilities.index', compact('categories'));
+        $categoriesData = $categories->map(function ($c) {
+            return [
+                'id' => $c->id,
+                'name' => $c->name,
+                'slug' => $c->slug ?? null,
+                'cover' => $c->coverPhoto?->image,
+                'photos' => $c->photos->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'name' => $p->name,
+                        'image' => $p->image,
+                        'caption' => $p->caption ?? '',
+                        'description' => $p->description ?? '',
+                    ];
+                })->toArray(),
+            ];
+        })->toArray();
+
+        return view('guest.facilities.index', [
+            'categoriesData' => $categoriesData
+        ]);
     }
 
+    // OPTIONAL: single category page
     public function show($slug)
     {
         $category = FacilityCategory::with('photos')->where('slug', $slug)->firstOrFail();
-
         return view('guest.facilities.show', compact('category'));
     }
 
+    // public: track view count
     public function trackPhotoView(Request $request, $photoId)
     {
         $photo = FacilityPhoto::findOrFail($photoId);
-        
-        // Increment view count
         $photo->increment('view_count');
-        
+
         return response()->json([
             'success' => true,
             'view_count' => $photo->view_count
         ]);
     }
 
-    public function toggleLike(Request $request, $photoId)
+    // return whether current logged user liked + total count
+    public function getLikeStatus(Request $request, $photoId)
     {
         $photo = FacilityPhoto::findOrFail($photoId);
-        $sessionId = $request->session()->getId();
-        $ipAddress = $request->ip();
-        $userId = auth('web')->id(); // Get logged in user ID
 
-        // Check if already liked (by user_id if logged in, otherwise by session)
-        $query = FacilityPhotoLike::where('facility_photo_id', $photoId);
-        
-        if ($userId) {
-            $query->where('user_id', $userId);
-        } else {
-            $query->where('session_id', $sessionId);
+        $liked = false;
+        if (auth('web')->check()) {
+            $liked = FacilityPhotoLike::where('facility_photo_id', $photoId)
+                ->where('user_id', auth('web')->id())
+                ->exists();
         }
-        
-        $existingLike = $query->first();
 
-        if ($existingLike) {
-            // Unlike
-            $existingLike->delete();
+        return response()->json([
+            'success' => true,
+            'liked' => (bool)$liked,
+            'like_count' => FacilityPhotoLike::where('facility_photo_id', $photoId)->count(),
+        ]);
+    }
+
+    // toggle like (requires auth by your routes)
+    public function toggleLike(Request $request, $photoId)
+    {
+        if (!auth('web')->check()) {
+            return response()->json([
+                'success' => false,
+                'redirect' => route('login'),
+            ], 401);
+        }
+
+        $photo = FacilityPhoto::findOrFail($photoId);
+        $user = auth('web')->user();
+
+        $existing = FacilityPhotoLike::where('facility_photo_id', $photoId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
             $liked = false;
         } else {
-            // Like
             FacilityPhotoLike::create([
                 'facility_photo_id' => $photoId,
-                'user_id' => $userId,
-                'session_id' => $sessionId,
-                'ip_address' => $ipAddress,
+                'user_id' => $user->id,
+                'ip_address' => $request->ip(),
             ]);
             $liked = true;
         }
 
-        $likeCount = FacilityPhotoLike::where('facility_photo_id', $photoId)->count();
-
         return response()->json([
             'success' => true,
             'liked' => $liked,
-            'like_count' => $likeCount,
+            'like_count' => FacilityPhotoLike::where('facility_photo_id', $photoId)->count(),
         ]);
     }
 
+
+    // get approved comments for a photo (public)
     public function getComments($photoId)
     {
-        $photo = FacilityPhoto::findOrFail($photoId);
-        
         $comments = FacilityPhotoComment::where('facility_photo_id', $photoId)
             ->where('is_approved', true)
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get(['id', 'user_id', 'name', 'content', 'created_at']);
+
+        // normalize to simple array for JS
+        $commentsArray = $comments->map(function ($c) {
+            return [
+                'id' => $c->id,
+                'user_id' => $c->user_id,
+                'name' => $c->name ?? 'Guest',
+                'content' => $c->content,
+                'created_at' => $c->created_at->toDateTimeString(),
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'comments' => $comments,
+            'comments' => $commentsArray,
         ]);
     }
 
+    // store comment (your routes protect it with auth middleware)
     public function storeComment(Request $request, $photoId)
     {
-        $photo = FacilityPhoto::findOrFail($photoId);
-
-        // Honeypot check
-        if ($request->filled('website')) {
+        if (!auth('web')->check()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Spam detected.'
-            ], 422);
+                'redirect' => route('user.login'),
+                'message' => 'Please login to comment.'
+            ], 401);
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'nullable|string|max:100',
             'content' => 'required|string|max:1000',
         ]);
 
@@ -121,40 +162,28 @@ class FacilityController extends Controller
             ], 422);
         }
 
-        $userId = auth('web')->id();
-        $userName = auth('web')->check() ? auth('web')->user()->name : ($request->name ?: 'Anonymous');
+        $photo = FacilityPhoto::findOrFail($photoId);
+        $user = auth('web')->user();
 
         $comment = FacilityPhotoComment::create([
             'facility_photo_id' => $photoId,
-            'user_id' => $userId,
-            'name' => $userName,
-            'content' => $request->content,
-            'is_approved' => true, // Auto-approve
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'content' => $request->input('content'),
+            'is_approved' => true,
             'ip_address' => $request->ip(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Comment posted successfully!',
-            'comment' => $comment,
+            'comment' => [
+                'id' => $comment->id,
+                'user_id' => $comment->user_id,
+                'name' => $comment->name,
+                'content' => $comment->content,
+                'created_at' => $comment->created_at->toDateTimeString(),
+            ],
         ], 201);
-    }
-
-    public function getLikeStatus(Request $request, $photoId)
-    {
-        $photo = FacilityPhoto::findOrFail($photoId);
-        $sessionId = $request->session()->getId();
-
-        $liked = FacilityPhotoLike::where('facility_photo_id', $photoId)
-            ->where('session_id', $sessionId)
-            ->exists();
-
-        $likeCount = FacilityPhotoLike::where('facility_photo_id', $photoId)->count();
-
-        return response()->json([
-            'success' => true,
-            'liked' => $liked,
-            'like_count' => $likeCount,
-        ]);
     }
 }

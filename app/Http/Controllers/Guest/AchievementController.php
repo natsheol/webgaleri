@@ -11,131 +11,106 @@ use Illuminate\Support\Facades\Validator;
 
 class AchievementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $achievements = Achievement::latest()->paginate(12); // 12 per page
-        return view('guest.achievements.index', compact('achievements'));
+        $achievements = Achievement::with('house')->latest()->get();
+
+        $achievementsData = $achievements->map(function($a) {
+            return [
+                'id' => $a->id,
+                'title' => $a->title,
+                'description' => \Illuminate\Support\Str::limit($a->description, 120),
+                'image' => $a->image,
+                'writer' => $a->writer ?? 'Admin',
+                'date' => $a->date->format('F j, Y'),
+                'house' => $a->house->name ?? 'General',
+            ];
+        });
+
+        return view('guest.achievements.index', compact('achievementsData'));
     }
 
-    public function show($id)
-    {
-        $achievement = Achievement::findOrFail($id);
-        return view('guest.achievements.show', compact('achievement'));
-    }
-
+    /** ================= LIKE SYSTEM ================= */
     public function toggleLike(Request $request, $achievementId)
     {
+        if (!auth('web')->check()) {
+            return response()->json(['success'=>false,'message'=>'Please login.'],401);
+        }
+
         $achievement = Achievement::findOrFail($achievementId);
-        $sessionId = $request->session()->getId();
-        $ipAddress = $request->ip();
+        $user = auth('web')->user();
 
-        // Check if already liked
-        $existingLike = AchievementLike::where('achievement_id', $achievementId)
-            ->where('session_id', $sessionId)
-            ->first();
+        $existing = AchievementLike::where('achievement_id',$achievementId)->where('user_id',$user->id)->first();
 
-        if ($existingLike) {
-            // Unlike
-            $existingLike->delete();
+        if($existing){
+            $existing->delete();
             $liked = false;
         } else {
-            // Like
             AchievementLike::create([
-                'achievement_id' => $achievementId,
-                'user_id' => auth('web')->id(),
-                'session_id' => $sessionId,
-                'ip_address' => $ipAddress,
+                'achievement_id'=>$achievementId,
+                'user_id'=>$user->id,
+                'ip_address'=>$request->ip()
             ]);
             $liked = true;
         }
 
-        $likeCount = AchievementLike::where('achievement_id', $achievementId)->count();
-
         return response()->json([
-            'success' => true,
-            'liked' => $liked,
-            'like_count' => $likeCount,
+            'success'=>true,
+            'liked'=>$liked,
+            'like_count'=>AchievementLike::where('achievement_id',$achievementId)->count()
         ]);
     }
 
-    public function getLikeStatus(Request $request, $achievementId)
+    public function getLikeStatus($achievementId)
     {
-        $achievement = Achievement::findOrFail($achievementId);
-        $sessionId = $request->session()->getId();
-        $userId = auth()->id();
-
-        $query = AchievementLike::where('achievement_id', $achievementId);
-        if ($userId) {
-            $query->where('user_id', $userId);
-        } else {
-            $query->where('session_id', $sessionId);
+        $liked = false;
+        if(auth('web')->check()){
+            $liked = AchievementLike::where('achievement_id',$achievementId)
+                ->where('user_id',auth('web')->id())->exists();
         }
-        $liked = $query->exists();
-
-        $likeCount = AchievementLike::where('achievement_id', $achievementId)->count();
 
         return response()->json([
-            'success' => true,
-            'liked' => $liked,
-            'like_count' => $likeCount,
+            'success'=>true,
+            'liked'=>$liked,
+            'like_count'=>AchievementLike::where('achievement_id',$achievementId)->count()
         ]);
     }
 
+    /** ================= COMMENT SYSTEM ================= */
     public function getComments($achievementId)
     {
-        $achievement = Achievement::findOrFail($achievementId);
-        
-        $comments = AchievementComment::where('achievement_id', $achievementId)
-            ->where('is_approved', true)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $comments = AchievementComment::where('achievement_id',$achievementId)
+            ->where('is_approved',true)
+            ->latest()->get();
 
         return response()->json([
-            'success' => true,
-            'comments' => $comments,
+            'success'=>true,
+            'comments'=>$comments
         ]);
     }
 
     public function storeComment(Request $request, $achievementId)
     {
-        $achievement = Achievement::findOrFail($achievementId);
-
-        // Honeypot check
-        if ($request->filled('website')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Spam detected.'
-            ], 422);
+        if(!auth('web')->check()){
+            return response()->json(['success'=>false,'message'=>'Please login.'],401);
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'nullable|string|max:100',
-            'content' => 'required|string|max:1000',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+        $validator = Validator::make($request->all(),['content'=>'required|string|max:1000']);
+        if($validator->fails()){
+            return response()->json(['success'=>false,'errors'=>$validator->errors()],422);
         }
 
-        $userId = auth('web')->id();
-        $userName = auth('web')->check() ? auth('web')->user()->name : ($request->name ?: 'Anonymous');
+        $user = auth('web')->user();
 
         $comment = AchievementComment::create([
-            'achievement_id' => $achievementId,
-            'user_id' => $userId,
-            'name' => $userName,
-            'content' => $request->content,
-            'is_approved' => true, // Auto-approve
-            'ip_address' => $request->ip(),
+            'achievement_id'=>$achievementId,
+            'user_id'=>$user->id,
+            'name'=>$user->name,
+            'content'=>$request->input('content'),
+            'is_approved'=>true,
+            'ip_address'=>$request->ip()
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Comment posted successfully!',
-            'comment' => $comment,
-        ], 201);
+        return response()->json(['success'=>true,'comment'=>$comment]);
     }
 }

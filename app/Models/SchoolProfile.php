@@ -25,6 +25,7 @@ class SchoolProfile extends Model
         'motto',            
         'headmaster_name',  
         'headmaster_photo',
+        'history',
     ];
 
     public function founders()

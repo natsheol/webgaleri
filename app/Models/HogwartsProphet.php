@@ -17,10 +17,10 @@ class HogwartsProphet extends Model
         'date',
         'image',
         'view_count',
-        'slug', // tambahin ini
+        'slug',
     ];
 
-    // Biar slug otomatis kebentuk dari title
+    
     protected static function boot()
     {
         parent::boot();

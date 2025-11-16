@@ -54,7 +54,8 @@ class SchoolProfileController extends Controller
             'houseStats',
             'studentsTotal',
             'totalProfessors',
-            'studentPerYear'
+            'studentPerYear',
+            'hero_image'
         ));
     }
 }

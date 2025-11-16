@@ -12,6 +12,7 @@ class Founder extends Model
         'birth_year',
         'photo',
         'description',
+        'school_profile_id'
     ];
 
     public function schoolProfile()

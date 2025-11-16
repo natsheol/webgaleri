@@ -11,7 +11,7 @@
             <div class="hidden lg:flex lg:items-center lg:space-x-8">
                 <a href="{{ route('guest.home') }}" class="block text-gray-700 hover:text-amber-700">Home</a>
                 <a href="{{ route('guest.home') }}#about" class="block text-gray-700 hover:text-amber-700">Profile</a>
-                <a href="{{ route('guest.home') }}#houses" class="block text-gray-700 hover:text-amber-700">Houses</a>
+                <a href="{{ route('guest.houses.index') }}" class="block text-gray-700 hover:text-amber-700">Houses</a>
                 <a href="{{ route('guest.hogwarts-prophet.index') }}" class="block text-gray-700 hover:text-amber-700">HogwartsProphet</a>
                 <a href="{{ route('guest.facilities.index') }}" class="block text-gray-700 hover:text-amber-700">Facilities</a>
                 
@@ -31,8 +31,8 @@
                         </button>
                         
                         <div x-show="userMenu" @click.away="userMenu = false" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
-                            <a href="{{ route('user.profile') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                                <i class="fas fa-user mr-2"></i> My Profile
+                            <a href="{{ route('user.profile') }}">
+                                 My Profile
                             </a>
                             <form action="{{ route('user.logout') }}" method="POST">
                                 @csrf
@@ -43,10 +43,14 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('user.login') }}" class="text-gray-700 hover:text-amber-700">Login</a>
-                    <a href="{{ route('user.register') }}" class="px-4 py-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded-lg hover:opacity-90 transition">
-                        Register
+                    <a href="{{ route('user.login') }}"
+                    class="text-lg md:text-l font-extrabold 
+                            text-transparent bg-clip-text 
+                            bg-[linear-gradient(to_right,#b03535,#3c5e5e,#425d9e)]
+                            drop-shadow-s hover:opacity-90 transition">
+                    Log in
                     </a>
+
                 @endauth
             </div>
 
@@ -59,9 +63,10 @@
                 </button>
             </div>
         </div>
+        
     </div>
 
-    <!-- Mobile Menu
+    <!-- mobile menu -->
     <div x-show="open" class="lg:hidden px-4 pb-4 space-y-2">
         <a href="{{ route('guest.home') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">Home</a>
         <a href="{{ route('guest.home') }}#school-profile" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">Profile</a>
@@ -84,5 +89,5 @@
             <a href="{{ route('user.login') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded">Login</a>
             <a href="{{ route('user.register') }}" class="block px-4 py-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white rounded text-center">Register</a>
         @endauth
-    </div> -->
+    </div>
 </nav>

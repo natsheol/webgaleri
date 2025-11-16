@@ -11,12 +11,11 @@
                 ['url' => '/admin', 'label' => 'Dashboard'],
                 ['url' => '/admin/hogwarts-prophet', 'label' => 'Hogwarts Prophet'],
                 ['url' => '/admin/achievements', 'label' => 'Achievements'],
-                ['url' => '/admin/facilities/categories', 'label' => 'Facility Categories'],
+                ['url' => '/admin/facilities', 'label' => 'Facility Categories'],
                 ['url' => '/admin/houses', 'label' => 'Houses'],
                 ['url' => route('admin.school-profile.index'), 'label' => 'School Profile'],
                 ['url' => route('admin.comments.index'), 'label' => 'Comments & Likes'],
                 ['url' => route('admin.users.index'), 'label' => 'User Management'],
-                ['url' => '/admin/settings', 'label' => 'Settings'],
             ];
         @endphp
 

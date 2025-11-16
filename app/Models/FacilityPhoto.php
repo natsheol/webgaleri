@@ -34,8 +34,8 @@ class FacilityPhoto extends Model
 
     public function approvedComments()
     {
-        return $this->hasMany(FacilityPhotoComment::class, 'facility_photo_id')
-                    ->where('is_approved', true)
-                    ->orderBy('created_at', 'desc');
+        return $this->comments()
+            ->where('is_approved', true)
+            ->orderBy('created_at', 'desc');
     }
 }

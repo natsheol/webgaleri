@@ -1,117 +1,340 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-6 pt-32 pb-12">
-    {{-- Header --}}
-    <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-amber-800 drop-shadow-lg">Achievements</h1>
-        <p class="text-gray-600 mt-2">Latest accomplishments and highlights from our students</p>
-    </div>
+<div x-data="achievementPage()" x-cloak class="pt-28 pb-20 px-4 sm:px-6 lg:px-8">
 
-    {{-- Grid Achievements --}}
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        @forelse ($achievements as $item)
-            <article 
-                class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transform transition-all duration-300 group">
+    <div class="max-w-7xl mx-auto transition-all duration-700"
+         :class="pageLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'">
 
-                {{-- Image --}}
-                <div class="h-48 bg-gradient-to-r from-amber-600 to-amber-800 relative overflow-hidden cursor-pointer"
-                     onclick="openModal('{{ addslashes($item->title) }}', '{{ addslashes($item->writer ?? 'Admin') }}', '{{ $item->created_at->format('d M Y') }}', '{{ addslashes($item->image ? asset('storage/' . $item->image) : '') }}', `{{ addslashes($item->description) }}`)">
-                    @if (!empty($item->image) && file_exists(public_path('storage/' . $item->image)))
-                        <img src="{{ asset('storage/' . $item->image) }}" 
-                             class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
-                             alt="{{ $item->title }}">
-                    @else
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <i class="fas fa-trophy text-white text-6xl opacity-30"></i>
-                        </div>
-                    @endif
-                </div>
+        {{-- Header --}}
+        <div class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold tracking-tight text-gray-900 mb-2 transition-all duration-500">
+                Achievements
+            </h1>
+            <p class="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base md:text-lg leading-relaxed">
+                Browse all student achievements or filter by house to celebrate their magical accomplishments.
+            </p>
+        </div>
 
-                {{-- Konten --}}
-                <div class="p-5">
-                    <h2 class="text-xl font-bold text-gray-800 group-hover:text-amber-700 transition-colors duration-300">
-                        {{ $item->title }}
-                    </h2>
-                    <p class="text-gray-600 mt-2 text-sm">{{ Str::limit($item->description, 120) }}</p>
-                    <div class="mt-4 text-sm text-gray-500">
-                        <span>{{ $item->writer ?? 'Admin' }}</span> • 
-                        <span>{{ $item->created_at->format('d M Y') }}</span>
+        {{-- Category Selector --}}
+        <div class="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-8 text-gray-700 font-semibold">
+            <template x-for="cat in categories" :key="cat.id">
+                <button @click="selectCategory(cat.id)" type="button"
+                        class="relative px-3 py-1 hover:text-[#425d9e] transition-all duration-300 text-sm sm:text-base md:text-base"
+                        :class="selectedCategory === cat.id ? 'text-[#425d9e] font-bold' : ''">
+                    <span x-text="cat.name"></span>
+                    <span x-show="selectedCategory === cat.id" x-transition
+                          class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] rounded-full mt-1"></span>
+                </button>
+            </template>
+        </div>
+
+        {{-- Achievement Cards --}}
+        <div id="achievementGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+            <template x-for="(ach, idx) in paginatedAchievements" :key="ach.id">
+                <div class="group bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-300"
+                     @click="openModal(idx)">
+                    
+                    <div class="relative h-48 overflow-hidden">
+                        <img :src="ach.image ? `/storage/${ach.image}` : '/images/placeholder.jpg'" 
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                             :alt="ach.title">
+
+                        <span class="absolute top-3 left-3 px-2 py-1 text-xs sm:text-sm font-semibold rounded-full text-white shadow-sm z-10"
+                              :class="houseGradientClass(ach.house)">
+                            <span x-text="ach.house || 'General'"></span>
+                        </span>
+
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
 
-                    {{-- Action Buttons --}}
-                    <div class="mt-4 flex justify-between items-center">
-                        <button 
-                            class="text-amber-700 hover:underline text-sm font-semibold"
-                            onclick="openModal('{{ addslashes($item->title) }}', '{{ addslashes($item->writer ?? 'Admin') }}', '{{ $item->created_at->format('d M Y') }}', '{{ addslashes($item->image ? asset('storage/' . $item->image) : '') }}', `{{ addslashes($item->description) }}`)">
-                            Quick View
-                        </button>
-                        <div class="flex items-center">
-                            <span class="mr-2 text-gray-500">👁️</span>
-                            <a href="{{ route('guest.achievements.show', $item->id) }}" 
-                               class="text-sm bg-amber-600 text-white px-3 py-1 rounded-lg hover:bg-amber-700 transition">
-                               Read More
-                            </a>
+                    <div class="p-4 flex flex-col">
+                        <div class="flex-1">
+                            <div class="text-sm text-gray-500 mb-1" x-text="ach.date"></div>
+                            <h3 class="text-lg font-semibold font-serif text-gray-900" x-text="ach.title"></h3>
+                            <p class="text-gray-600 text-sm mt-1" x-text="ach.description"></p>
                         </div>
                     </div>
                 </div>
-            </article>
-        @empty
-            <p class="text-center col-span-full text-gray-500">No achievements available.</p>
-        @endforelse
-    </div>
-</div>
+            </template>
+        </div>
 
-{{-- Modal Overlay --}}
-<div id="achievementModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-2xl w-[80%] md:w-3/4 lg:w-2/3 h-[80%] overflow-y-auto relative p-6">
-        <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-        <img id="modalImage" class="w-full h-64 object-cover rounded-lg mb-4" alt="Achievement Image">
-        <h2 id="modalTitle" class="text-2xl font-bold text-amber-800 mb-2"></h2>
-        <p id="modalMeta" class="text-sm text-gray-500 mb-4"></p>
-        <div id="modalContent" class="text-gray-700 leading-relaxed"></div>
-        
-        {{-- Share Buttons --}}
-        <div class="mt-6 flex space-x-4">
-            <a id="whatsappShare" target="_blank" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">WhatsApp</a>
-            <button onclick="shareOnFacebook()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Facebook</button>
-            <button onclick="shareOnTwitter()" class="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600">Twitter</button>
-            <button onclick="copyLink()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Copy Link</button>
+        {{-- Pagination --}}
+        <div class="flex justify-center mt-8 space-x-2">
+            <template x-for="page in totalPages" :key="page">
+                <button @click="currentPage = page" 
+                        class="px-3 py-1 rounded-lg transition-colors duration-300 font-semibold"
+                        :class="currentPage === page ? 'bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] text-white shadow' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'">
+                    <span x-text="page"></span>
+                </button>
+            </template>
+        </div>
+    </div>
+
+    {{-- Modal --}}
+    <div x-show="modalOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4">
+
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeModal()"></div>
+
+        <div class="relative w-full max-w-6xl h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+
+            <div class="md:w-3/5 w-full bg-black flex items-center justify-center relative">
+                <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-6">
+                    <h3 class="text-2xl md:text-4xl font-bold font-serif text-white drop-shadow-lg leading-tight mb-1" x-text="currentAchievement.title"></h3>
+                    <p class="text-xs md:text-sm text-gray-300" x-text="currentAchievement.date"></p>
+                    <p class="text-gray-200 mt-2" x-text="currentAchievement.description"></p>
+                </div>
+                <button @click="prevAchievement" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 hover:bg-white/40 text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <img :src="currentAchievement.image ? `/storage/${currentAchievement.image}` : '/images/placeholder.jpg'" 
+                     class="max-h-[80vh] max-w-full object-contain transition-all duration-500"
+                     :alt="currentAchievement.title" />
+
+                <button @click="nextAchievement" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 hover:bg-white/40 text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="md:w-2/5 w-full p-5 flex flex-col">
+
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-xl font-bold font-serif text-gray-900" x-text="currentAchievement.title"></h3>
+                        <p class="text-sm text-gray-600 mt-1" x-text="currentAchievement.description"></p>
+                        <p class="text-xs text-gray-500 mt-1" x-text="currentAchievement.date"></p>
+                    </div>
+
+                    {{-- Like --}}
+                    <button @click="toggleLike()" class="p-2 rounded-full hover:bg-gray-100 transition" :class="liked ? 'text-red-600' : 'text-gray-700'">
+                        <svg x-show="!liked" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <svg x-show="liked" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="currentColor">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <span class="text-sm text-gray-600 mt-2" x-text="likeCount + ' likes'"></span>
+
+                {{-- Comments --}}
+                <div class="border-t mt-3 pt-3 flex-1 overflow-y-auto space-y-3">
+                    <template x-if="comments.length === 0">
+                        <p class="text-sm text-gray-500">No comments yet. Be the first to comment!</p>
+                    </template>
+                    <template x-for="c in comments" :key="c.id">
+                        <div class="text-sm">
+                            <strong x-text="c.name || 'Anonymous'" class="text-gray-800"></strong>
+                            <p x-text="c.content" class="text-gray-700"></p>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- Add Comment --}}
+                <form @submit.prevent="postComment()" class="mt-3 flex gap-2">
+                    <input type="text" x-model="newComment" placeholder="Write a comment..."
+                        class="flex-1 px-3 py-2 rounded-2xl border border-gray-200 focus:outline-none" required>
+                    <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-white font-serif shadow transition hover:scale-105"
+                            style="background: linear-gradient(90deg, #b03535, #3c5e5e, #425d9e);">
+                        Send
+                    </button>
+                </form>
+            </div>
+
+            <button @click="closeModal()" class="absolute top-3 right-3 md:hidden p-2 bg-white/80 rounded-full">
+                <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6L18 18M6 18L18 6" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-let currentUrl = "";
+function achievementPage() {
+    return {
+        pageLoaded: false,
+        selectedCategory: 'all',
+        modalOpen: false,
+        modalIndex: 0,
+        currentAchievement: {},
+        achievements: @json($achievementsData),
+        categories: [
+            {id:'all', name:'All Achievements'},
+            {id:'gryffindor', name:'Gryffindor'},
+            {id:'slytherin', name:'Slytherin'},
+            {id:'ravenclaw', name:'Ravenclaw'},
+            {id:'hufflepuff', name:'Hufflepuff'},
+        ],
 
-function openModal(title, writer, date, image, content) {
-    document.getElementById('modalTitle').innerText = title;
-    document.getElementById('modalMeta').innerText = `${writer} • ${date}`;
-    document.getElementById('modalImage').src = image || '';
-    document.getElementById('modalContent').innerHTML = content;
-    document.getElementById('achievementModal').classList.remove('hidden');
-    document.getElementById('achievementModal').classList.add('flex');
-    
-    currentUrl = window.location.origin + "/guest/achievements"; // bisa diganti slug jika ada
-    document.getElementById('whatsappShare').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(currentUrl)}`;
-}
+        liked: false,
+        likeCount: 0,
+        comments: [],
+        newComment: '',
 
-function closeModal() {
-    document.getElementById('achievementModal').classList.add('hidden');
-    document.getElementById('achievementModal').classList.remove('flex');
-}
+        currentPage: 1,
+        perPage: 6,
 
-function shareOnFacebook() {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`, "_blank");
-}
+        init() {
+            setTimeout(() => this.pageLoaded = true, 50);
+            this.$watch('modalOpen', v => {
+                document.body.style.overflow = v ? 'hidden' : '';
+                if(!v){
+                    history.replaceState(null,'','/guest/achievements');
+                }
+            });
 
-function shareOnTwitter() {
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}`, "_blank");
-}
+            const params = new URLSearchParams(window.location.search);
+            const modalId = params.get('modal');
+            if(modalId) this.openModalById(parseInt(modalId));
+        },
 
-function copyLink() {
-    navigator.clipboard.writeText(currentUrl);
-    alert("Link copied to clipboard!");
+        get filteredAchievements() {
+            if(this.selectedCategory === 'all') return this.achievements;
+            return this.achievements.filter(a => a.house.toLowerCase() === this.selectedCategory);
+        },
+        get totalPages() {
+            return Math.ceil(this.filteredAchievements.length / this.perPage);
+        },
+        get paginatedAchievements() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredAchievements.slice(start, start + this.perPage);
+        },
+
+        selectCategory(id) {
+            this.selectedCategory = id;
+            this.currentPage = 1;
+        },
+
+        openModal(idx) {
+            this.modalIndex = idx;
+            this.currentAchievement = this.filteredAchievements[idx];
+            this.modalOpen = true;
+            this.loadAchievementState();
+
+            const id = this.currentAchievement.id;
+            const params = new URLSearchParams(window.location.search);
+            params.set('modal', id);
+            history.replaceState(null, '', `/guest/achievements?${params.toString()}`);
+        },
+
+        openModalById(id){
+            const idx = this.filteredAchievements.findIndex(a=>a.id===id);
+            if(idx!==-1) this.openModal(idx);
+        },
+
+        closeModal() { this.modalOpen = false; },
+
+        nextAchievement() {
+            if (!this.filteredAchievements.length) return;
+            this.modalIndex = (this.modalIndex + 1) % this.filteredAchievements.length;
+            this.openModal(this.modalIndex);
+        },
+
+        prevAchievement() {
+            if (!this.filteredAchievements.length) return;
+            this.modalIndex = (this.modalIndex - 1 + this.filteredAchievements.length) % this.filteredAchievements.length;
+            this.openModal(this.modalIndex);
+        },
+
+        houseGradientClass(house) {
+            const colors = {
+                'Gryffindor': 'bg-gradient-to-r from-[#5c0c0c] to-[#8a3333]',
+                'Slytherin': 'bg-gradient-to-r from-[#063015] to-[#336343]',
+                'Ravenclaw': 'bg-gradient-to-r from-[#182552] to-[#6e8ab5]',
+                'Hufflepuff': 'bg-gradient-to-r from-[#59510a] to-[#ab8e37]',
+                'General': 'bg-gray-400'
+            };
+            return colors[house] || colors['General'];
+        },
+
+        async loadAchievementState() {
+            if(!this.currentAchievement?.id) return;
+
+            try {
+                const likeRes = await fetch(`/guest/achievements/${this.currentAchievement.id}/like-status`);
+                if(likeRes.ok){
+                    const data = await likeRes.json();
+                    this.liked = data.liked;
+                    this.likeCount = data.likes_count ?? 0;
+                }
+            } catch(e){}
+
+            try {
+                const commentRes = await fetch(`/guest/achievements/${this.currentAchievement.id}/comments`);
+                if(commentRes.ok){
+                    const data = await commentRes.json();
+                    this.comments = (data.comments ?? []).map(c => ({
+                        id: c.id,
+                        name: c.name || 'Guest',
+                        content: c.content
+                    }));
+                }
+            } catch(e){}
+        },
+
+        async toggleLike(){
+            if(!this.currentAchievement?.id) return;
+            try{
+                const res=await fetch(`/guest/achievements/${this.currentAchievement.id}/like`,{
+                    method:'POST',
+                    headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}'}
+                });
+                
+                if(res.status===401){
+                    // FIXED REDIRECT
+                    window.location.href=`/guest/login?redirect=${encodeURIComponent(window.location.href)}`;
+                    return;
+                }
+
+                if(res.ok){
+                    const data=await res.json();
+                    this.liked=data.liked;
+                    this.likeCount=data.like_count??0;
+                }
+            }catch(e){}
+        },
+
+        async postComment(){
+            if(!this.newComment.trim()) return;
+
+            try{
+                const res=await fetch(`/guest/achievements/${this.currentAchievement.id}/comments`,{
+                    method:'POST',
+                    headers:{
+                        'Content-Type':'application/json',
+                        'X-CSRF-TOKEN':'{{ csrf_token() }}'
+                    },
+                    body:JSON.stringify({content:this.newComment})
+                });
+
+                if(res.status===401){
+                    // FIXED REDIRECT
+                    window.location.href=`/guest/login?redirect=${encodeURIComponent(window.location.href)}`;
+                    return;
+                }
+
+                if(res.ok){
+                    const data=await res.json();
+                    const c=data.comment;
+                    this.comments.push({id:c.id,name:c.name||'Guest',content:c.content});
+                    this.newComment='';
+                }
+            }catch(e){}
+        }
+    }
 }
 </script>
+<script src="//unpkg.com/alpinejs" defer></script>
 @endsection

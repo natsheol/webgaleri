@@ -1,12 +1,21 @@
-@extends('layouts.app')
-
-@section('content')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Login | Hogwarts CMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#b03535] via-[#3c5e5e] to-[#425d9e] py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8 bg-white rounded-2xl shadow-2xl p-8">
         {{-- Header --}}
         <div class="text-center">
-            <h2 class="text-3xl font-extrabold text-gray-900">Welcome Back!</h2>
-            <p class="mt-2 text-sm text-gray-600">Sign in to your Hogwarts account</p>
+            <h2 class="text-3xl font-extrabold font-serif bg-clip-text text-black drop-shadow">
+                Welcome Back!
+            </h2>
+            <p class="mt-2 text-sm text-gray-600 italic">Sign in to your Hogwarts account</p>
         </div>
 
         {{-- Error Messages --}}
@@ -29,6 +38,9 @@
 
         {{-- Login Form --}}
         <form class="mt-8 space-y-6" action="{{ route('user.login.submit') }}" method="POST">
+            @if(request('redirect'))
+                <input type="hidden" name="redirect" value="{{ request('redirect') }}">
+            @endif
             @csrf
             
             <div class="space-y-4">
@@ -93,7 +105,26 @@
                     </a>
                 </p>
             </div>
+
+            {{-- OR divider --}}
+            <div class="flex items-center justify-center my-6">
+                <div class="w-1/5 border-t border-gray-300"></div>
+                <span class="mx-3 text-gray-500 text-sm">or</span>
+                <div class="w-1/5 border-t border-gray-300"></div>
+            </div>
+
+            {{-- Continue as Guest --}}
+            <div class="text-center">
+                <a href="{{ route('guest.home') }}"
+                   class="inline-flex items-center justify-center w-full py-3 px-4 text-sm font-medium rounded-lg
+                          border border-[#3c5e5e] text-[#3c5e5e] hover:bg-[#3c5e5e] hover:text-white 
+                          transition-all duration-300 shadow-sm">
+                    <i class="fas fa-hat-wizard mr-2"></i>
+                    Continue as Guest
+                </a>
+            </div>
         </form>
     </div>
 </div>
-@endsection
+</body>
+</html>

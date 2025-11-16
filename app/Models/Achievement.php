@@ -10,8 +10,9 @@ class Achievement extends Model
         'title',
         'description',
         'image',
-        'category',
+        'house_id',
         'date',
+
     ];
 
     protected $casts = [
@@ -33,6 +34,11 @@ class Achievement extends Model
         return $this->hasMany(AchievementComment::class, 'achievement_id')
                     ->where('is_approved', true)
                     ->orderBy('created_at', 'desc');
+    }
+
+    public function house()
+    {
+        return $this->belongsTo(House::class);
     }
 }
 

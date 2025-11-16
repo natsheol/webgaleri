@@ -19,7 +19,7 @@ class AchievementController extends Controller
     {
         $house_id = $request->query('house_id'); 
         $houses = House::all(); 
-        return view('admin.achievements.create', compact('house_id', 'houses', 'categories'));
+        return view('admin.achievements.create', compact('house_id', 'houses'));
     }
 
 
@@ -28,7 +28,7 @@ class AchievementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
             'house_id' => 'nullable|exists:houses,id',
             'date' => 'nullable|date',
         ]);
@@ -51,25 +51,32 @@ class AchievementController extends Controller
     }
 
     public function update(Request $request, Achievement $achievement)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
-            'house_id' => 'nullable|exists:houses,id',
-            'date' => 'nullable|date',
-        ]);
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+        'house_id' => 'nullable|exists:houses,id',
+        'date' => 'nullable|date',
+    ]);
 
-        $data = $request->only(['title', 'description', 'house_id', 'date']);
+    $data = $request->only(['title', 'description', 'house_id', 'date']);
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('achievements', 'public');
+    if ($request->hasFile('image')) {
+        // Hapus gambar lama jika ada
+        if ($achievement->image && file_exists(public_path('storage/' . $achievement->image))) {
+            unlink(public_path('storage/' . $achievement->image));
         }
 
-        $achievement->update($data);
-
-        return redirect()->route('admin.achievements.index')->with('success', 'Achievement updated!');
+        // Simpan gambar baru
+        $data['image'] = $request->file('image')->store('achievements', 'public');
     }
+
+    $achievement->update($data);
+
+    // Biar tetap di halaman yang sama (misal edit house)
+    return redirect()->back()->with('success', 'Achievement updated successfully!');
+}
 
     public function destroy(Achievement $achievement)
     {

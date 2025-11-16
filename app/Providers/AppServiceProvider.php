@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Share School Profile ke semua view
+        // Share School Profile 
         View::composer('*', function ($view) {
             $schoolProfile = SchoolProfile::first();
             $view->with('schoolProfile', $schoolProfile);

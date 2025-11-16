@@ -2,13 +2,65 @@
 
 @section('title', 'Edit School Profile')
 
-@section('content')
-<div class="bg-white rounded-lg shadow-sm p-6">
+@php
+    $links = [
+        ['label' => 'Dashboard', 'route' => route('admin.dashboard')],
+        ['label' => 'School Profile', 'route' => route('admin.school-profile.index')],
+        ['label' => 'Edit School Profile', 'route' => null],
+    ];
+@endphp
 
-    <form action="{{ route('admin.school-profile.update') }}" method="POST" enctype="multipart/form-data">
+@section('content')
+    <div class="mb-4 flex items-center">
+        <a href="{{ route('admin.school-profile.index') }}" class="flex items-center gap-2 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 
+            text-gray-700 rounded-md font-semibold transition">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back</span>
+        </a>
+    </div>
+
+@if (session('error'))
+<div id="updateErrorBanner" 
+     class="mb-6 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-xl flex items-center justify-between shadow-md transition-all duration-300">
+    <div class="flex items-center space-x-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01M12 5a7 7 0 00-7 7v5h14v-5a7 7 0 00-7-7z" />
+        </svg>
+        <span class="font-semibold text-sm md:text-base">
+            {{ session('error') ?? 'Failed to update changes. Please try again.' }}
+        </span>
+    </div>
+    <button onclick="document.getElementById('updateErrorBanner').classList.add('hidden')" 
+            class="text-red-500 hover:text-red-700 font-bold text-lg">
+        ×
+    </button>
+</div>
+@endif
+
+{{-- Tempat muncul alert dari AJAX --}}
+<div id="ajaxErrorBanner" 
+     class="hidden mb-6 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-xl flex items-center justify-between shadow-md">
+    <div class="flex items-center space-x-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01M12 5a7 7 0 00-7 7v5h14v-5a7 7 0 00-7-7z" />
+        </svg>
+        <span id="ajaxErrorMessage" class="font-semibold text-sm md:text-base">Failed to update changes.</span>
+    </div>
+    <button onclick="document.getElementById('ajaxErrorBanner').classList.add('hidden')" 
+            class="text-red-500 hover:text-red-700 font-bold text-lg">
+        ×
+    </button>
+</div>
+
+
+<div class="bg-white rounded-lg shadow-sm p-6">
+    <form action="{{ route('admin.school-profile.update', $profile->id) }}" 
+        method="POST" enctype="multipart/form-data" 
+        class="space-y-6">
         @csrf
         @method('PUT')
-
         {{-- ABOUT SCHOOL --}}
         <div class="bg-gray-50 p-6 rounded-lg mb-8">
             <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -135,12 +187,27 @@
 
                 <div>
                     <label for="hero_image" class="block text-sm font-medium text-gray-700 mb-1">Hero Image</label>
+
+                    {{-- Existing Hero Preview --}}
                     @if($profile->hero_image)
-                        <div class="mb-2">
-                            <img src="{{ asset('storage/' . $profile->hero_image) }}" alt="Hero Image" class="h-32 w-auto rounded-lg shadow">
+                        <div class="mb-3">
+                            <img src="{{ asset('storage/' . $profile->hero_image) }}" 
+                                alt="Current Hero Image" 
+                                class="h-32 w-auto rounded-lg shadow">
                         </div>
                     @endif
-                    <input type="file" name="hero_image" id="hero_image" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+
+                    {{-- Drop Zone Upload --}}
+                    <div id="dropArea" 
+                        class="w-full h-60 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center relative border-2 border-dashed border-gray-300 cursor-pointer transition hover:border-indigo-400">
+                        <img id="photoPreview" src="#" class="object-cover w-full h-full hidden">
+                        <span id="photoPlaceholder" class="text-gray-400 text-center px-2">Drop or paste hero image</span>
+                        <input type="file" name="hero_image" id="hero_image" accept="image/*" 
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    </div>
+                    <small class="text-gray-500 text-center block mt-2">
+                        Drag & drop image, paste (Ctrl/Cmd + V), or click to select
+                    </small>
                 </div>
             </div>
 
@@ -152,6 +219,19 @@
 
                 <label for="founded_year" class="block text-sm font-medium text-gray-700 mb-1">Founded Year</label>
                 <input type="number" name="founded_year" id="founded_year" value="{{ old('founded_year', $profile->founded_year) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500">
+
+                <div class="mt-6">
+                <label for="history" class="block text-sm font-medium text-gray-700 mb-1">
+                    Founding History
+                </label>
+                <textarea 
+                    id="history" 
+                    name="history" 
+                    rows="4" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Tell the story of how the school was founded..."
+                >{{ old('history', $profile->history) }}</textarea>
+            </div>
             </div>
         </div>
 
@@ -196,88 +276,151 @@
     </form>
 </div>
 
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('form');
     const submitBtn = document.getElementById('submitBtn');
-    
-    form.addEventListener('submit', async function(e) {
+    const dropArea = document.getElementById('dropArea');
+    const photoPreview = document.getElementById('photoPreview');
+    const photoPlaceholder = document.getElementById('photoPlaceholder');
+    const inputFile = document.getElementById('hero_image');
+
+    // 🖼️ Preview upload
+    inputFile.addEventListener('change', handleFile);
+    dropArea.addEventListener('dragover', (e) => {
         e.preventDefault();
-        
-        const formData = new FormData(form);
+        dropArea.classList.add('border-indigo-400');
+    });
+    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('border-indigo-400'));
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('border-indigo-400');
+        if (e.dataTransfer.files.length > 0) {
+            inputFile.files = e.dataTransfer.files;
+            handleFile();
+        }
+    });
+
+    // 🖼️ Paste handler (Ctrl+V)
+    document.addEventListener('paste', (e) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (item.type.indexOf('image') !== -1) {
+                const file = item.getAsFile();
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                inputFile.files = dt.files;
+                handleFile();
+            }
+        }
+    });
+
+    function handleFile() {
+        const file = inputFile.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            photoPreview.src = e.target.result;
+            photoPreview.classList.remove('hidden');
+            photoPlaceholder.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ✅ SweetAlert success (sessionStorage)
+    if (sessionStorage.getItem('updateSuccess')) {
+        Swal.fire({
+            title: 'Success!',
+            text: 'School profile updated successfully!',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+        });
+        sessionStorage.removeItem('updateSuccess');
+    }
+
+    // 🚀 Async submit with fetch
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const originalButtonText = submitBtn.innerHTML;
+
+        // Ubah tombol jadi loading
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
-        
+        submitBtn.innerHTML = `
+            <span class="inline-block animate-spin mr-2">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            </span> Saving...
+        `;
+
         try {
             const response = await fetch(form.action, {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-HTTP-Method-Override': 'PUT',
+                },
             });
-            
-            const result = await response.json();
-            
+
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch {
+                throw new Error('Invalid JSON response from server');
+            }
+
             if (result.success) {
-                Swal.fire({
+                await Swal.fire({
                     title: 'Success!',
-                    text: result.message,
+                    text: result.message || 'School profile successfully updated!',
                     icon: 'success',
-                    confirmButtonColor: '#3b82f6',
-                    confirmButtonText: 'OK',
                     timer: 2000,
-                    timerProgressBar: true,
-                    didOpen: (toast) => {
-                        toast.addEventListener('mouseenter', Swal.stopTimer);
-                        toast.addEventListener('mouseleave', Swal.resumeTimer);
-                    }
-                }).then(() => {
-                    window.location.href = result.redirect;
+                    showConfirmButton: false,
                 });
+
+                sessionStorage.setItem('updateSuccess', '1');
+                window.location.href = result.redirect || "{{ route('admin.school-profile.index') }}";
             } else {
                 throw new Error(result.message || 'Failed to update profile');
             }
-        } catch (error) {
-            Swal.fire({
-                title: 'Error!',
-                text: error.message,
-                icon: 'error',
-                confirmButtonColor: '#ef4444',
-                confirmButtonText: 'OK'
-            });
+        }catch (error) {
+    // 🔹 Munculkan banner error
+    const banner = document.getElementById('ajaxErrorBanner');
+    const msg = document.getElementById('ajaxErrorMessage');
+    msg.textContent = error.message || 'Failed to update changes.';
+    banner.classList.remove('hidden');
+    banner.classList.add('flex');
+
+    Swal.fire({
+        title: 'Error!',
+        text: error.message,
+        icon: 'error',
+        confirmButtonColor: '#ef4444',
+    });
+
+        } finally {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Save Changes';
+            submitBtn.innerHTML = originalButtonText;
         }
     });
 });
 </script>
+
+
+
 @endpush
 
 @endsection
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@if(session('success'))
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        Swal.fire({
-            title: 'Success!',
-            text: '{{ session('success') }}',
-            icon: 'success',
-            confirmButtonColor: '#3b82f6',
-            confirmButtonText: 'OK',
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
-    });
-</script>
-@endif
-@endpush

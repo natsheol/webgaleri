@@ -1,198 +1,291 @@
-{{-- sections/school-profiles.blade.php --}}
-
-{{-- Hero Section --}}
-<section id="hero" class="relative h-[60vh] flex items-center justify-center overflow-hidden bg-gray-200">
-    {{-- Background Image Parallax --}}
-    <img src="{{ $profile->hero_image ? asset('storage/' . $profile->hero_image) : 'https://picsum.photos/1600/900?random=1' }}" 
-         alt="School Placeholder" 
-         class="absolute inset-0 w-full h-full object-cover opacity-80">
-
-    {{-- Overlay --}}
-    <div class="absolute inset-0 bg-black bg-opacity-40"></div>
-
-    {{-- Text Content --}}
-    <div class="relative z-10 text-center text-white px-6">
-        <h1 class="text-3xl md:text-4xl font-bold drop-shadow-lg" data-aos="fade-up">
-            {{ $profile->title ?? 'Hogwarts School' }}
-        </h1>
-        <p class="mt-4 max-w-2xl mx-auto text-lg" data-aos="fade-up" data-aos-delay="200">
-            Welcome to the magical world of Hogwarts
-        </p>
-
-        @if(!empty($profile->logo))
-            <div class="mt-4 flex justify-center" data-aos="fade-up" data-aos-delay="300">
-                <img src="{{ asset('storage/' . $profile->logo) }}" alt="School Logo" class="h-16 w-auto rounded-md shadow-lg bg-white/60 p-2">
-            </div>
-        @endif
-    </div>
-</section>
-
-
-
-{{-- About + Location Section --}}
-<section id="about" class="py-16 px-6 bg-white">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-        
-        {{-- About (2/3) --}}
+{{-- Hogwarts Houses Section --}}
+<section id="about" class="py-20 px-6 bg-[#f4f1ec]">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
+        {{-- About + Vision/Mission --}}
         <div class="lg:col-span-2" data-aos="fade-up">
-            <h2 class="text-3xl font-bold mb-6 text-gray-800">About the School</h2>
-            <div class="prose prose-lg max-w-none">
-                <p class="text-gray-700 leading-relaxed text-lg">
-                    {{ $profile->about ?? 'Welcome to Hogwarts School of Witchcraft and Wizardry, the world\'s foremost institution for magical education. Founded around 990 A.D. by four of the greatest witches and wizards of the age: Godric Gryffindor, Helga Hufflepuff, Rowena Ravenclaw, and Salazar Slytherin, each of whom established one of the four Houses.' }}
-                </p>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 font-serif border-l-4 pl-4"
+                style="border-image: linear-gradient(to right, #b03535, #3c5e5e, #425d9e) 1;">
+                About the School
+            </h2>
+            <p class="text-gray-700 leading-relaxed text-lg mb-8">{{ $profile->about }}</p>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-10">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4 font-serif border-l-4 pl-4"
+                        style="border-image: linear-gradient(to right, #b03535, #3c5e5e, #425d9e) 1;">
+                        Vision
+                    </h3>
+                    <p class="text-gray-700 text-lg leading-relaxed">{{ $profile->vision ?? 'Our vision description goes here.' }}</p>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4 font-serif border-l-4 pl-4"
+                        style="border-image: linear-gradient(to right, #b03535, #3c5e5e, #425d9e) 1;">
+                        Mission
+                    </h3>
+                    <p class="text-gray-700 text-lg leading-relaxed">{{ $profile->mission ?? 'Our mission description goes here.' }}</p>
+                </div>
             </div>
         </div>
 
-        {{-- Location (1/3) --}}
-        <div class="lg:col-span-1" data-aos="fade-up" data-aos-delay="150">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">Location</h2>
-            <div class="rounded-xl overflow-hidden shadow-lg bg-gray-100">
+        {{-- Location --}}
+        <div data-aos="fade-up" data-aos-delay="200">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 font-serif border-l-4 pl-4"
+                style="border-image: linear-gradient(to right, #b03535, #3c5e5e, #425d9e) 1;">
+                Location
+            </h2>
+            <div class="rounded-2xl overflow-hidden shadow-lg bg-gray-100">
                 @if(!empty($profile->map_embed))
-                    {{-- Render saved embed code (trusted admin input) --}}
-                    <div class="w-full h-64">
-                        {!! $profile->map_embed !!}
-                    </div>
+                    <div class="w-full h-64">{!! $profile->map_embed !!}</div>
                 @else
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1984.954067890708!2d-0.127758!3d51.507351!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48761b3333355555%3AHogwarts!2sLondon!5e0!3m2!1sen!2suk!4v1700000000000" 
-                            width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18..."
+                            width="100%" height="256" style="border:0;" allowfullscreen="" loading="lazy">
+                    </iframe>
                 @endif
             </div>
-            
-            {{-- Contact Info --}}
-            @if($profile->address || $profile->phone || $profile->email)
-                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h3>
-                    @if($profile->address)
-                        <p class="text-sm text-gray-600 mb-2">
-                            <i class="fas fa-map-marker-alt mr-2 text-indigo-500"></i>
-                            {{ $profile->address }}
-                        </p>
-                    @endif
-                    @if($profile->phone)
-                        <p class="text-sm text-gray-600 mb-2">
-                            <i class="fas fa-phone mr-2 text-indigo-500"></i>
-                            {{ $profile->phone }}
-                        </p>
-                    @endif
-                    @if($profile->email)
-                        <p class="text-sm text-gray-600">
-                            <i class="fas fa-envelope mr-2 text-indigo-500"></i>
-                            {{ $profile->email }}
-                        </p>
-                    @endif
-                </div>
-            @endif
         </div>
+    </div>
+
+    {{-- Hogwarts Houses --}}
+    <div class="max-w-6xl mx-auto mt-12">
+    <h2 class="text-3xl font-bold text-gray-900 font-serif border-l-4 pl-4 mb-6"
+        style="border-image: linear-gradient(to right, #b03535, #3c5e5e, #425d9e) 1;">
+        Hogwarts Houses
+    </h2>
+
+    {{-- Grid Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        @php
+            $houseColors = [
+                'Gryffindor' => ['from' => '#120502', 'to' => '#a62d2d'],
+                'Slytherin'  => ['from' => '#021205', 'to' => '#2f703a'],
+                'Ravenclaw'  => ['from' => '#020a12', 'to' => '#3e6cb3'],
+                'Hufflepuff' => ['from' => '#120502', 'to' => '#ab8e37'],
+            ];
+        @endphp
+
+        @foreach($houseStats as $house)
+            <a href="{{ route('guest.houses.index', ['house' => $house->id]) }}"
+            class="group relative rounded-2xl overflow-hidden shadow-md cursor-pointer transition-transform duration-500 min-h-[340px] hover:scale-115"
+            style="background: linear-gradient(to bottom, {{ $houseColors[$house->name]['from'] }}, {{ $houseColors[$house->name]['to'] }}); 
+                    clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);"
+                    onmouseover="this.style.transform='scale(1.05)';"
+                    onmouseout="this.style.transform='scale(1)';">
+
+    {{-- Banner Content --}}
+    <div class="flex flex-col items-center text-white p-6 space-y-4">
+        <img src="{{ asset('storage/' . $house->logo) }}" class="w-12 h-12 drop-shadow-lg">
+        <h3 class="text-3xl font-serif">{{ $house->name }}</h3>
+
+        <div class="gap-6 text-center pt-10 grid grid-cols-2">
+            <div>
+                <p class="font-serif text-sm text-white opacity-80">Students</p>
+                <p class="text-3xl font-bold text-white drop-shadow-lg">{{ $house->students_last7years }}</p>
+            </div>
+            <div>
+                <p class="font-serif text-sm text-white opacity-80">Alumni</p>
+                <p class="text-3xl font-bold text-white drop-shadow-lg">{{ $house->total_alumni ?? 0 }}</p>
+            </div>
+        </div>
+    </div>
+</a>
+@endforeach
+
 
     </div>
+</div>
+
+<div class="mt-10 transition-all duration-500 relative z-0">
+        <a href="#history" class="block">
+            <div class="pt-20 flex flex-col items-center hover:scale-110 transition-all duration-500">
+                <p style="
+                    background: linear-gradient(90deg, #7a1b1b 0%, #3b4f5f 50%, #243c7a 100%);
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    text-fill-color: transparent;
+                    display: inline-block;"
+                    class="text-4xl font-serif font-extrabold text-center">
+                    Discover Our Legacy
+                </p>
+                <img src="{{ asset('storage/arrow.svg') }}" 
+                    alt="Arrow" 
+                    class="h-25 w-25 mt-2 transition-transform duration-300">
+            </div>
+        </a>
+    </div>
+    
+
+    
 </section>
 
 
-{{-- History Section --}}
-<section id="history" class="py-16 px-6 bg-gray-50">
-    <div class="max-w-5xl mx-auto" data-aos="fade-up">
-        <h2 class="text-2xl font-bold mb-6">History</h2>
 
-        {{-- Founded Year --}}
-        @if(!empty($profile->founded_year))
-            <p class="text-gray-600 mb-4">
-                Founded in <span class="font-semibold">{{ $profile->founded_year }}</span>
+
+
+
+{{-- History + Founders --}}
+<div x-data="founderModal()" x-cloak>
+    <section id="history" class="py-20 px-6 bg-[#f4f1ec] border-t border-gray-200 overflow-hidden">
+        <div class="max-w-5xl mx-auto" data-aos="fade-up">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 font-serif border-l-4 border-[#3c5e5e] pl-4">Our History</h2>
+
+            @if($profile->founded_year)
+                <p class="text-gray-700 mb-4 text-lg italic">
+                    Founded in <span class="font-semibold text-gray-900">{{ $profile->founded_year }}</span>
+                </p>
+            @endif
+
+            <p class="text-gray-700 leading-relaxed mb-6 text-justify">
+                {{ $profile->history ?? 'The school has a rich history dating back over a thousand years...' }}
             </p>
-        @endif
 
-        {{-- Main History Content --}}
-        <p class="text-gray-700 leading-relaxed mb-6">
-            {{ $profile->history ?? 'The school has a rich history dating back over a thousand years...' }}
-        </p>
+            {{-- Founders --}}
+            @php
+                $founderTextColors = [
+                    'Godric Gryffindor' => '#300901', 
+                    'Salazar Slytherin' => '#013006', 
+                    'Rowena Ravenclaw'  => '#011130', 
+                    'Helga Hufflepuff'  => '#302701', 
+                ];
+            @endphp
 
-        {{-- Founders --}}
-        @if(!empty($founders) && $founders->count())
-            <h3 class="text-xl font-semibold mb-4">Founders</h3>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach($founders as $founder)
-                    <div class="bg-white rounded-lg shadow p-4 flex flex-col items-center text-center hover:shadow-lg transition" 
-                         data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
-                        <img src="{{ $founder->photo ? asset('storage/' . $founder->photo) : 'https://picsum.photos/150/150?random=' . $loop->index }}" 
-                             alt="{{ $founder->name }}" 
-                             class="w-24 h-24 rounded-full mb-3 object-cover">
-                        <h4 class="font-bold text-lg text-amber-700">{{ $founder->name }}</h4>
-                        <p class="text-gray-600 text-sm mt-1">{{ $founder->role ?? 'Founder' }}</p>
+            <h2 class="inline-block text-3xl font-serif font-extrabold pt-4 text-center">
+                The Four Founders of Hogwarts
+            </h2>
+            <div class="w-24 h-1 mx-auto mt-4">
+                <svg width="100%" height="100%" viewBox="0 0 96 4" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#b03535" />
+                            <stop offset="50%" style="stop-color:#3c5e5e" />
+                            <stop offset="100%" style="stop-color:#425d9e" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#gradient)" rx="2" ry="2" />
+                </svg>
+            </div>
+
+            {{-- Grid Founder Cards --}}
+            <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-8 pt-8">
+                @foreach ($founders as $founder)
+                    @php $textColor = $founderTextColors[$founder->name] ?? '#3c5e5e'; @endphp
+                    <div @click="openModal({{ $loop->index }})" class="cursor-pointer bg-white rounded-3xl overflow-hidden shadow-lg transition-transform duration-500 hover:scale-105">
+                        <img src="{{ $founder->photo ? asset('storage/' . $founder->photo) : 'https://picsum.photos/300/300?random=' . $loop->index }}"
+                             alt="{{ $founder->name }}"
+                             class="w-full h-40 object-cover">
+                        <div class="p-5 text-left">
+                            <h3 class="font-semibold text-xl text-center" style="color: {{ $textColor }};">
+                                {{ $founder->name }}
+                            </h3>
+                            <p class="text-gray-500 text-sm mt-1 italic text-left pt-4">
+                                {{ 'Born in ' . $founder->birth_year }}
+                            </p>
+                        </div>
                     </div>
                 @endforeach
             </div>
-        @endif
-    </div>
-</section>
+        </div>
+    </section>
 
-<!-- Students Overview Section -->
-<section id="houses" class="py-16 px-6 bg-gray-50">
-    <div class="max-w-6xl mx-auto">
+    {{-- Modal --}}
+<div x-show="open"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-300"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+     @keydown.escape.window="close()">
 
-        <div class="bg-white shadow rounded-xl p-6 mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Students Overview</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+    <div x-show="open"
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="opacity-0 scale-90"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-300 transform"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-90"
+         class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl h-[360px] md:h-[420px] flex flex-col md:flex-row overflow-hidden relative">
 
-                <!-- Left Column: Total + House Stats -->
-                <div class="flex flex-col space-y-6">
-                    <!-- Total Students -->
-                    <div class="text-center">
-                        <p id="totalStudents" 
-                           class="text-5xl font-bold mb-2 bg-gradient-to-r from-[#b03535] via-[#3c5e5e] to-[#425d9e] bg-clip-text text-transparent">
-                            {{ $totalStudents ?? 0 }}
-                        </p>
-                        <p class="text-gray-600">Total Students (last 7 years)</p>
-                    </div>
+        {{-- Photo --}}
+        <div class="md:w-1/2 h-48 md:h-auto">
+            <img :src="current.photo ? '/storage/' + current.photo : 'https://picsum.photos/300/300?random=' + currentIndex" 
+                 :alt="current.name" class="w-full h-full object-cover">
+        </div>
 
-                    <!-- House Stats -->
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        @foreach($houseStats as $house)
-                            <div class="p-4 rounded-lg border shadow-sm text-center transform transition duration-500 ease-out
-                                        hover:scale-105 hover:shadow-lg animate-fade-in-up"
-                                 style="animation-delay: {{ $loop->index * 150 }}ms;">
-                                <img src="{{ asset('storage/' . $house->logo) }}" 
-                                     class="w-10 h-10 mx-auto mb-2" 
-                                     alt="{{ $house->name }}">
-                                <p class="font-semibold">{{ $house->name }}</p>
-                                <p class="text-gray-600 text-sm">{{ $house->students_last7years }} students</p>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
+        {{-- Info --}}
+        <div class="md:w-1/2 p-6 flex flex-col justify-between">
+            <div>
+                <h3 class="text-2xl font-bold mb-2" x-text="current.name"></h3>
+                <p class="text-gray-500 italic mb-4" x-text="'Born in ' + current.birth_year"></p>
+                <p class="text-gray-700 text-justify text-sm md:text-base" x-text="current.description"></p>
+            </div>
 
-                <!-- Right Column: Professors Overview -->
-                <div class="flex flex-col space-y-6">
-                    <div class="bg-gray-50 rounded-xl shadow-md p-6 text-center">
-                        <h3 class="text-xl font-semibold text-amber-700">Professors</h3>
-                        <p class="text-3xl font-bold text-gray-800 mt-2">{{ $totalProfessors ?? 0 }}</p>
-                    </div>
-
-                    <!-- Optional: Chart.js placeholder -->
-                    <div class="w-full h-64">
-                        <canvas id="studentChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-
+            {{-- Controls --}}
+            <div class="flex justify-between mt-4">
+                <button @click="prev()" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm md:text-base">← Previous</button>
+                <button @click="next()" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm md:text-base">Next →</button>
             </div>
         </div>
 
+        {{-- Close --}}
+        <button @click="close()" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 font-bold text-2xl md:text-3xl">&times;</button>
     </div>
-</section>
+</div>
 
+</div>
 
-{{-- Scripts for Parallax + AOS --}}
+{{-- Scripts --}}
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script src="//unpkg.com/alpinejs" defer></script>
-<script>
-  AOS.init({
-    duration: 500,
-    once: true
-  });
 
-  // Parallax Background Hero
-  const heroImg = document.querySelector('#hero img');
-  window.addEventListener('scroll', () => {
-      const scroll = window.scrollY;
-      heroImg.style.transform = `translateY(${scroll * 0.3}px) scale(1.05)`;
-  });
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    AOS.init({ duration: 600, once: true });
+
+    // Hero parallax
+    const heroImg = document.querySelector('#hero img');
+    if(heroImg){
+        window.addEventListener('scroll', () => {
+            heroImg.style.transform = `translateY(${window.scrollY*0.25}px) scale(1.05)`;
+        });
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor=>{
+        anchor.addEventListener('click', function(e){
+            const target = document.querySelector(this.getAttribute('href'));
+            if(target){
+                e.preventDefault();
+                window.scrollTo({top: target.offsetTop, behavior:'smooth'});
+            }
+        });
+    });
+});
+
+// AlpineJS founder modal
+function founderModal(){
+    return {
+        open: false,
+        currentIndex: 0,
+        founders: @json($founders),
+        current: {},
+        openModal(index){
+            this.currentIndex = index;
+            this.current = this.founders[index];
+            this.open = true;
+        },
+        close(){ this.open = false },
+        prev(){
+            this.currentIndex = (this.currentIndex - 1 + this.founders.length) % this.founders.length;
+            this.current = this.founders[this.currentIndex];
+        },
+        next(){
+            this.currentIndex = (this.currentIndex + 1) % this.founders.length;
+            this.current = this.founders[this.currentIndex];
+        }
+    }
+}
+
 </script>

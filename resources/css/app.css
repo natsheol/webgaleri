@@ -10,4 +10,40 @@
       text-shadow: 0 0 20px rgba(128, 0, 255, 0.8);
     }
   }
-  
+
+  /* Hapus atau komentari kode gradient-fix sebelumnya */
+.gradient-fix,
+.gradient-fix::before {
+    all: unset;
+}
+
+/* Ganti dengan ini */
+a[class*="bg-gradient-"] {
+    position: relative;
+    z-index: 1;
+    transform: translateZ(0);
+}
+
+a[class*="bg-gradient-"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: inherit;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0.99;
+}
+
+/* Force hardware acceleration */
+a[class*="bg-gradient-"],
+a[class*="bg-gradient-"]::before {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-perspective: 1000;
+    perspective: 1000;
+}

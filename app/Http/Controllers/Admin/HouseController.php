@@ -19,30 +19,53 @@ class HouseController extends Controller
         return view('admin.houses.index', compact('houses'));
     }
 
-    public function edit(House $house)
-    {
-        $house->load('studentsRelation');
+    public function edit(Request $request, House $house)
+{
+    $house->load('studentsRelation');
 
-        $currentYear = date('Y');
-        $sevenYearsAgo = $currentYear - 6;
+    $currentYear = date('Y');
+    $sevenYearsAgo = $currentYear - 6;
 
-        // Total students 7 angkatan terakhir
-        $totalStudents = $house->studentsRelation()
-            ->whereBetween('year', [$sevenYearsAgo, $currentYear])
-            ->count();
+    // total 7 trahir
+    $totalStudents = $house->studentsRelation()
+        ->whereBetween('year', [$sevenYearsAgo, $currentYear])
+        ->count();
 
-        // Jumlah student per tahun
-        $studentsPerYear = $house->studentsRelation()
-            ->whereBetween('year', [$sevenYearsAgo, $currentYear])
-            ->selectRaw('year, count(*) as total')
-            ->groupBy('year')
-            ->orderByDesc('year')
-            ->get();
+    // total/yr
+    $studentsPerYear = $house->studentsRelation()
+        ->whereBetween('year', [$sevenYearsAgo, $currentYear])
+        ->selectRaw('year, count(*) as total')
+        ->groupBy('year')
+        ->orderByDesc('year')
+        ->get();
 
-        $achievements = $house->achievements()->latest()->get();
+    $achievements = $house->achievements()->latest()->get();
 
-        return view('admin.houses.edit', compact('house', 'totalStudents', 'studentsPerYear', 'achievements'));
+    $filter = $request->get('status', 'active');
+
+    $studentsQuery = $house->studentsRelation();
+
+    $houses = \App\Models\House::all();
+
+    if ($filter === 'active') {
+        $studentsQuery->where('year', '>=', $sevenYearsAgo);
+    } elseif ($filter === 'alumni') {
+        $studentsQuery->where('year', '<', $sevenYearsAgo);
     }
+
+    $students = $studentsQuery->orderByDesc('year')->get();
+
+    return view('admin.houses.edit', compact(
+        'house',
+        'totalStudents',
+        'studentsPerYear',
+        'achievements',
+        'students',
+        'filter',
+        'houses'
+    ));
+}
+
 
 
     public function update(Request $request, House $house)
@@ -102,6 +125,31 @@ class HouseController extends Controller
         return redirect()->route('admin.houses.edit', $house->id)
                         ->with('success', 'Achievement added successfully.');
     }
+
+    public function downloadSummary(Request $request, House $house)
+    {
+        $range = (int) $request->query('range', 3);
+        $status = $request->query('status', 'active');
+        $endYear = (int) $request->query('end_year', date('Y'));
+
+        $startYear = $endYear - $range + 1;
+
+        // Dummy data (nanti ganti pake query beneran)
+        $summary = $house->studentsRelation()
+            ->whereBetween('year', [$startYear, $endYear])
+            ->get(['year', 'total_students']);
+
+        // Sementara: tampilkan teks di browser biar ga error
+        return response()->make("
+            <h2>Summary PDF Preview (dummy)</h2>
+            <p>House: {$house->name}</p>
+            <p>Status: {$status}</p>
+            <p>Years: {$startYear} - {$endYear}</p>
+            <pre>".print_r($summary->toArray(), true)."</pre>
+        ");
+    }
+
+
 
 
 }

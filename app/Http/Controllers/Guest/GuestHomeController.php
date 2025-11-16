@@ -16,11 +16,19 @@ class GuestHomeController extends Controller
 {
     public function index()
     {
-        $houseStats = House::withCount([
-            'students as students_last7years' => function ($query) {
-                $query->where('created_at', '>=', now()->subYears(7));
-            }
-        ])->get();
+        $currentYear = now()->year;
+
+        // House Stats
+        $houseStats = House::with('achievements')->get()->map(function ($house) use ($currentYear) {
+            $house->students_last7years = Student::where('house_id', $house->id)
+                ->where('year', '>=', $currentYear - 6)
+                ->count();
+
+            $house->professors_count = Professor::where('house_id', $house->id)->count();
+            $house->total_alumni = Student::where('house_id', $house->id)->count();
+
+            return $house;
+        });
 
         $schoolProfile = SchoolProfile::first();
 
@@ -29,23 +37,24 @@ class GuestHomeController extends Controller
         $news = HogwartsProphet::latest()->take(3)->get();
 
         $categories = FacilityCategory::with('coverPhoto')
-        ->orderBy('sort_order')
-        ->limit(8)
-        ->get();
+            ->orderBy('sort_order')
+            ->limit(8)
+            ->get();
 
-        $achievements = Achievement::latest()->take(6)->get();
-        
+        // Hero Slideshow
+        $achievements = Achievement::latest()->take(6)->get()->map(function($achievement){
+            $achievement->image = $achievement->image ?? 'placeholder.jpg';
+            return $achievement;
+        });
 
         $founders = Founder::all();
-
         $totalStudents = Student::count();
-
         $totalProfessors = Professor::count();
 
         return view('guest.home', compact(
             'houses',
             'news',
-            'categories',   
+            'categories',
             'founders',
             'houseStats',
             'totalStudents',

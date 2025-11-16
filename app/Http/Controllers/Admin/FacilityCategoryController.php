@@ -44,7 +44,7 @@ class FacilityCategoryController extends Controller
             'is_active' => $request->has('is_active'),
         ]);
 
-        return redirect()->route('admin.facilities.categories.index')
+        return redirect()->route('admin.facilities.index')
                          ->with('success', 'Category created successfully!');
     }
 

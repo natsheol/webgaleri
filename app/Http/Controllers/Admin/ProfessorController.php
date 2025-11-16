@@ -21,10 +21,12 @@ class ProfessorController extends Controller
         if ($request->has('house_id') && $request->house_id) {
             $query->where('house_id', $request->house_id);
         }
-        $professors = $query->get();
+
+        $professors = $query->orderBy('id', 'desc')->paginate(7); // <- per 20 item
 
         return view('admin.professors.index', compact('professors', 'houses'));
     }
+
 
     /**
      * Show the form for creating a new professor.

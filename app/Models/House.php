@@ -39,4 +39,9 @@ class House extends Model
         return $this->hasMany(Student::class);
     }
 
+    public function school()
+    {
+        return $this->belongsTo(SchoolProfile::class, 'school_id');
+    }
+
 }

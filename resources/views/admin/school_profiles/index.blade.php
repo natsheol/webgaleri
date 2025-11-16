@@ -40,22 +40,27 @@
 
     {{-- Founding Info --}}
     <section class="bg-gray-50 rounded-2xl shadow p-8 mb-10">
-        <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span class="w-1.5 h-8 bg-gradient-to-b from-[#425d9e] via-[#3c5e5e] to-[#b03535] rounded-full"></span>
-            Founding Information
-        </h2>
+        
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-white rounded-2xl shadow p-6">
+            <div>
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span class="w-1.5 h-8 bg-gradient-to-b from-[#425d9e] via-[#3c5e5e] to-[#b03535] rounded-full"></span>
+                Founding Information
+            </h2>
             <div>
                 <p class="text-sm font-semibold text-gray-500 uppercase">Founded Year</p>
                 <p class="text-lg text-gray-800">{{ $profile->founded_year ?? '-' }}</p>
             </div>
-            <div class="flex items-start space-x-4">
-                @if($profile->founder_photo)
-                    <img src="{{ asset('storage/' . $profile->founder_photo) }}" 
-                         alt="Founder Photo" class="h-24 w-24 object-cover rounded-full border-4 border-gray-200 shadow">
-                @endif
             </div>
+            
+            <div>
+                <p class="text-sm font-semibold text-gray-500 uppercase">Founding History</p>
+                <p class="text-lg text-gray-800">{{ $profile->history ?? '-' }}</p>
+            </div>
+
+            
+            
         </div>
 
         {{-- Founders Grid --}}
@@ -159,4 +164,24 @@
         </div>
     </section>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Cek apakah baru saja sukses update
+    if (sessionStorage.getItem('updateSuccess')) {
+        Swal.fire({
+            title: 'Success!',
+            text: 'School profile updated successfully!',
+            icon: 'success',
+            confirmButtonColor: '#3b82f6',
+            timer: 2000,
+            showConfirmButton: false,
+        });
+        // Hapus flag supaya nggak muncul lagi kalau reload manual
+        sessionStorage.removeItem('updateSuccess');
+    }
+});
+</script>
 @endsection

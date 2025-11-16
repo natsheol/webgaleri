@@ -26,20 +26,20 @@ class StudentController extends Controller
         // Filter status
         if ($request->filled('status')) {
             if ($request->status == 'active') {
-                $query->where('year', '>=', $currentYear - 6); // aktif 7 tahun terakhir
+                $query->where('year', '>=', $currentYear - 6); // active
             } elseif ($request->status == 'alumni') {
-                $query->where('year', '<', $currentYear - 6); // alumni > 7 tahun
+                $query->where('year', '<', $currentYear - 6); // alumni 
             }
         }
 
-        $students = $query->with('house')->latest()->get();
+        $students = $query->with('house')->latest()->get(['id', 'photo', 'name', 'year', 'birth_date']);
 
-        // ✅ TOTAL ACTIVE STUDENTS (last 7 years, global) — only those with a house
+        // 
         $totalStudents = Student::whereNotNull('house_id')
                                 ->where('year', '>=', $currentYear - 6)
                                 ->count();
 
-        // ✅ BREAKDOWN PER HOUSE (hanya active students)
+        // 
         $houseStats = House::withCount([
             'students as students_last7years' => function ($query) use ($currentYear) {
                 $query->where('year', '>=', $currentYear - 6);
@@ -70,6 +70,18 @@ class StudentController extends Controller
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('students', 'public');
         }
+
+        $lastStudent = Student::where('year', $data['year'])->latest('id')->first();
+
+        $nextNumber = $lastStudent 
+            ? intval(substr($lastStudent->student_code, -3)) + 1 
+            : 1;
+
+        $prefix = ($data['year'] < now()->year - 6) ? 'ALU-' : 'STU-';
+
+        $data['student_code'] = $prefix . $data['year'] . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+
 
         Student::create($data);
 

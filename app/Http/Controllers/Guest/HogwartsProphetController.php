@@ -33,6 +33,13 @@ class HogwartsProphetController extends Controller
 
     public function toggleLike(Request $request, $articleId)
     {
+        if (!auth('web')->check()) {
+            return response()->json(['redirect' => route('user.login', [
+                'redirect' => url("/guest/hogwarts-prophet/{$articleId}")
+            ])]);
+        }
+
+
         $article = HogwartsProphet::findOrFail($articleId);
         $sessionId = $request->session()->getId();
         $ipAddress = $request->ip();
@@ -108,7 +115,12 @@ class HogwartsProphetController extends Controller
     {
         $article = HogwartsProphet::findOrFail($articleId);
 
-        // Honeypot check
+        if (!auth('web')->check()) {
+            return response()->json([
+            'redirect' => route('user.login', ['redirect' => url("/guest/hogwarts-prophet/{$articleId}")])
+        ]);
+        }
+
         if ($request->filled('website')) {
             return response()->json([
                 'success' => false,
@@ -134,7 +146,7 @@ class HogwartsProphetController extends Controller
             'hogwarts_prophet_id' => $articleId,
             'user_id' => $userId,
             'name' => $userName,
-            'content' => $request->content,
+            'content' => $request->input('content'),
             'is_approved' => true, // Auto-approve
             'ip_address' => $request->ip(),
         ]);

@@ -14,7 +14,7 @@ class FacilityPhotoController extends Controller
     public function index(FacilityCategory $category)
     {
         $photos = $category->photos()->get();
-        return view('admin.facilities.photos.index', compact('category', 'photos'));
+        return view('admin.facilities.index', compact('category', 'photos'));
     }
 
     // Show form create photo
@@ -47,7 +47,7 @@ class FacilityPhotoController extends Controller
         }
 
         return redirect()
-            ->route('admin.facilities.categories.photos.index', $category->id)
+            ->route('admin.facilities.index', $category->id)
             ->with('success', 'Photo uploaded successfully!');
     }
 
@@ -91,7 +91,7 @@ class FacilityPhotoController extends Controller
         }
 
         return redirect()
-            ->route('admin.facilities.categories.photos.index', $category->id)
+            ->route('admin.facilities.index', $category->id)
             ->with('success', 'Photo updated successfully!');
     }
 
@@ -111,7 +111,7 @@ class FacilityPhotoController extends Controller
         $photo->delete();
 
         return redirect()
-            ->route('admin.facilities.categories.photos.index', $category->id)
+            ->route('admin.facilities.index', $category->id)
             ->with('success', 'Photo deleted successfully!');
     }
 }

@@ -32,10 +32,11 @@ class HogwartsProphetController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title' => 'required|string|max:255',
+            'title'   => 'required|string|max:255',
             'content' => 'required|string',
-            'writer' => 'required|string|max:100',
-            'image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'writer'  => 'required|string|max:100',
+            'image'   => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'date'    => 'required|date',
         ]);
 
         if ($request->hasFile('image')) {
@@ -62,6 +63,7 @@ class HogwartsProphetController extends Controller
             'content' => 'required|string',
             'writer'  => 'nullable|string|max:255',
             'image'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'date'    => 'required|date',
         ]);
 
         if ($request->hasFile('image')) {
@@ -88,5 +90,15 @@ class HogwartsProphetController extends Controller
         $hogwartsProphet->delete();
 
         return redirect()->route('admin.hogwarts-prophet.index')->with('success', 'News deleted successfully!');
+    }
+
+    public function archive(Request $request, $id)
+    {
+        $article = HogwartsProphet::findOrFail($id);
+        $article->is_public = $request->input('is_public');
+        $article->save();
+
+        return redirect()->route('admin.hogwarts-prophet.index')
+                        ->with('success', 'Article status updated successfully.');
     }
 }
