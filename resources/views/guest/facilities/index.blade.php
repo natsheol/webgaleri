@@ -128,17 +128,17 @@
                         <p class="text-xs text-gray-500 mt-1" x-text="currentPhoto.caption"></p>
                     </div>
 
-                    <!-- <button @click="toggleLike()" class="p-2 rounded-full hover:bg-gray-100" :class="liked ? 'text-red-600' : 'text-gray-700'">
+                    <button @click="toggleLike()" class="like-button p-2 rounded-full hover:bg-gray-100" :class="liked ? 'text-red-600' : 'text-gray-700'">
                         <svg x-show="!liked" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                         </svg>
                         <svg x-show="liked" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="currentColor">
                             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                         </svg>
-                    </button> -->
+                    </button>
                 </div>
 
-                <!-- <span class="text-sm text-gray-600 mt-2" x-text="likeCount + ' likes'"></span> -->
+                <span class="like-count text-sm text-gray-600 mt-2" x-text="likeCount + ' likes'"></span>
 
                 {{-- Comments --}}
                 <div class="border-t mt-3 pt-3 flex-1 overflow-y-auto space-y-3">
@@ -261,32 +261,63 @@ function galleryPage() {
         },
 
         // --- Like ---
-        // async toggleLike() {
-        //     const id = this.currentPhoto?.id;
-        //     if (!id) return;
+        async toggleLike() {
+            const id = this.currentPhoto?.id;
+            if (!id) return;
 
-        //     try {
-        //         const res = await fetch(`/guest/facilities/photos/${id}/like`, {
-        //             method: 'POST',
-        //             headers: {
-        //                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        //             },
-        //         });
+            try {
+                const url = `/guest/facilities/photos/${id}/like`;
 
-        //         if (res.status === 401) {
-        //             // redirect to login preserving current URL
-        //             const redirectUrl = encodeURIComponent(window.location.href);
-        //             window.location.href = `/user/login?redirect=${redirectUrl}`;
-        //             return;
-        //         }
+                // CSRF from meta
+                const token = document.querySelector('meta[name="csrf-token"]')?.content;
+                if (!token) {
+                    console.error('CSRF token not found');
+                    return;
+                }
 
-        //         if (res.ok) {
-        //             const data = await res.json();
-        //             this.liked = data.liked;
-        //             this.likeCount = data.like_count; // consistent
-        //         }
-        //     } catch (e) { console.error(e); }
-        // },
+                const headers = new Headers();
+                headers.append('X-CSRF-TOKEN', token);
+                headers.append('Accept', 'application/json');
+                headers.append('X-Requested-With', 'XMLHttpRequest');
+
+                const formData = new FormData();
+                formData.append('_token', token);
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+
+                if (res.status === 401) {
+                    const redirectUrl = encodeURIComponent(window.location.href);
+                    window.location.href = `/user/login?redirect=${redirectUrl}`;
+                    return;
+                }
+
+                if (res.status === 419) {
+                    // Token mismatch, refresh page to get a fresh token
+                    window.location.reload();
+                    return;
+                }
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    console.error('Like failed', err);
+                    alert('Gagal memperbarui like. Silakan coba lagi.');
+                    return;
+                }
+
+                const data = await res.json();
+                this.liked = !!data.liked;
+                this.likeCount = data.like_count ?? this.likeCount;
+
+            } catch (e) {
+                console.error(e);
+                alert('Gagal memperbarui like. Silakan coba lagi.');
+            }
+        },
 
         // --- Comment ---
         async postComment() {

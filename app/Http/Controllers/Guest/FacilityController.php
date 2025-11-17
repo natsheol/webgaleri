@@ -90,9 +90,14 @@ class FacilityController extends Controller
 
         $photo = FacilityPhoto::findOrFail($photoId);
         $user = auth('web')->user();
+        $sessionId = $request->session()->getId();
 
+        // Find existing like by either current user or current session (to prevent duplicates)
         $existing = FacilityPhotoLike::where('facility_photo_id', $photoId)
-            ->where('user_id', $user->id)
+            ->where(function($q) use ($user, $sessionId) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('session_id', $sessionId);
+            })
             ->first();
 
         if ($existing) {
@@ -102,6 +107,7 @@ class FacilityController extends Controller
             FacilityPhotoLike::create([
                 'facility_photo_id' => $photoId,
                 'user_id' => $user->id,
+                'session_id' => $sessionId,
                 'ip_address' => $request->ip(),
             ]);
             $liked = true;

@@ -267,9 +267,11 @@ function achievementPage() {
                 if(likeRes.ok){
                     const data = await likeRes.json();
                     this.liked = data.liked;
-                    this.likeCount = data.likes_count ?? 0;
+                    this.likeCount = data.like_count ?? 0;
                 }
-            } catch(e){}
+            } catch(e){
+                console.error('Error loading like status:', e);
+            }
 
             try {
                 const commentRes = await fetch(`/guest/achievements/${this.currentAchievement.id}/comments`);
@@ -281,58 +283,109 @@ function achievementPage() {
                         content: c.content
                     }));
                 }
-            } catch(e){}
+            } catch(e){
+                console.error('Error loading comments:', e);
+            }
         },
 
-        async toggleLike(){
-            if(!this.currentAchievement?.id) return;
-            try{
-                const res=await fetch(`/guest/achievements/${this.currentAchievement.id}/like`,{
-                    method:'POST',
-                    headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}'}
+        async toggleLike() {
+            console.log('toggleLike called');
+            if (!this.currentAchievement?.id) {
+                console.error('No achievement ID found');
+                return;
+            }
+
+            try {
+                const url = `/guest/achievements/${this.currentAchievement.id}/like`;
+                console.log('Making request to:', url);
+                
+                // Get CSRF token from meta tag
+                const token = document.querySelector('meta[name="csrf-token"]')?.content;
+                if (!token) {
+                    console.error('CSRF token not found');
+                    return;
+                }
+                
+                // Create form data to send as form-urlencoded
+                const formData = new URLSearchParams();
+                formData.append('_token', token);
+                
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData.toString(),
+                    credentials: 'same-origin'
                 });
                 
-                if(res.status===401){
-                    // FIXED REDIRECT
-                    window.location.href=`/guest/login?redirect=${encodeURIComponent(window.location.href)}`;
-                    return;
+                console.log('Response status:', res.status);
+                
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    console.error('Error response:', errorData);
+                    
+                    if (res.status === 401) {
+                        console.log('User not authenticated, redirecting to login');
+                        window.location.href = `/guest/login?redirect=${encodeURIComponent(window.location.href)}`;
+                        return;
+                    }
+                    
+                    if (res.status === 419) {
+                        console.log('CSRF token mismatch, reloading page to get new token');
+                        window.location.reload();
+                        return;
+                    }
+                    
+                    throw new Error(`HTTP error! status: ${res.status}`);
                 }
 
-                if(res.ok){
-                    const data=await res.json();
-                    this.liked=data.liked;
-                    this.likeCount=data.like_count??0;
-                }
-            }catch(e){}
+                const data = await res.json();
+                console.log('Response data:', data);
+                
+                this.liked = data.liked;
+                this.likeCount = data.like_count ?? 0;
+                console.log('Like status updated - liked:', this.liked, 'count:', this.likeCount);
+
+            } catch (error) {
+                console.error('Error in toggleLike:', error);
+                alert('Gagal memperbarui like. Silakan coba lagi.');
+            }
         },
 
-        async postComment(){
-            if(!this.newComment.trim()) return;
+        async postComment() {
+            if (!this.newComment.trim() || !this.currentAchievement?.id) return;
 
-            try{
-                const res=await fetch(`/guest/achievements/${this.currentAchievement.id}/comments`,{
-                    method:'POST',
-                    headers:{
-                        'Content-Type':'application/json',
-                        'X-CSRF-TOKEN':'{{ csrf_token() }}'
+            try {
+                const res = await fetch(`/guest/achievements/${this.currentAchievement.id}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body:JSON.stringify({content:this.newComment})
+                    body: JSON.stringify({ content: this.newComment })
                 });
+                const data = await res.json();
 
-                if(res.status===401){
-                    // FIXED REDIRECT
-                    window.location.href=`/guest/login?redirect=${encodeURIComponent(window.location.href)}`;
+                if (!res.ok || data.error === 'unauthenticated') {
+                    window.location.href = `/guest/login?redirect=${encodeURIComponent(window.location.href)}`;
                     return;
                 }
 
-                if(res.ok){
-                    const data=await res.json();
-                    const c=data.comment;
-                    this.comments.push({id:c.id,name:c.name||'Guest',content:c.content});
-                    this.newComment='';
+                if (data.success) {
+                    const c = data.comment;
+                    this.comments.push({ id: c.id, name: c.name || 'Guest', content: c.content });
+                    this.newComment = '';
                 }
-            }catch(e){}
+
+            } catch (e) {
+                console.error(e);
+            }
         }
+
     }
 }
 </script>

@@ -118,14 +118,11 @@ Route::prefix('guest')->name('guest.')->group(function () {
 
 
     /* Achievements */
-    Route::get('/achievements', [GuestAchievementController::class, 'index'])
-        ->name('achievements.index');
-    Route::get('/achievements/{id}', [GuestAchievementController::class, 'show'])
-        ->name('achievements.show');
+    Route::get('/achievements', [GuestAchievementController::class, 'index'])->name('achievements.index');
+    Route::get('/achievements/{id}', [GuestAchievementController::class, 'show'])->name('achievements.show');
 
     Route::get('/achievements/{achievementId}/like-status', [GuestAchievementController::class, 'getLikeStatus'])
         ->name('achievements.like-status');
-
     Route::get('/achievements/{achievementId}/comments', [GuestAchievementController::class, 'getComments'])
         ->name('achievements.comments');
 

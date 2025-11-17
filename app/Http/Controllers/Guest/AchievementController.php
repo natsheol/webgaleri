@@ -34,30 +34,40 @@ class AchievementController extends Controller
     public function toggleLike(Request $request, $achievementId)
     {
         if (!auth('web')->check()) {
-            return response()->json(['success'=>false,'message'=>'Please login.'],401);
+            return response()->json(['success' => false, 'message' => 'Please login.'], 401);
         }
 
+        // Ensure the achievement exists
         $achievement = Achievement::findOrFail($achievementId);
+
         $user = auth('web')->user();
+        $sessionId = $request->session()->getId();
 
-        $existing = AchievementLike::where('achievement_id',$achievementId)->where('user_id',$user->id)->first();
+        // Find existing like by either current user or current session
+        $existing = AchievementLike::where('achievement_id', $achievementId)
+            ->where(function ($q) use ($user, $sessionId) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('session_id', $sessionId);
+            })
+            ->first();
 
-        if($existing){
+        if ($existing) {
             $existing->delete();
             $liked = false;
         } else {
             AchievementLike::create([
-                'achievement_id'=>$achievementId,
-                'user_id'=>$user->id,
-                'ip_address'=>$request->ip()
+                'achievement_id' => $achievementId,
+                'user_id' => $user->id,
+                'session_id' => $sessionId,
+                'ip_address' => $request->ip(),
             ]);
             $liked = true;
         }
 
         return response()->json([
-            'success'=>true,
-            'liked'=>$liked,
-            'like_count'=>AchievementLike::where('achievement_id',$achievementId)->count()
+            'success' => true,
+            'liked' => $liked,
+            'like_count' => AchievementLike::where('achievement_id', $achievementId)->count(),
         ]);
     }
 
